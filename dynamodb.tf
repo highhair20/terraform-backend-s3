@@ -1,6 +1,7 @@
 /*
-  The primary key to be used to lock the state in dynamoDB must be called LockID and must be a “string” type (S).
-/*
+  The primary key to be used to lock the state in dynamoDB must be
+  called LockID and must be a “string” type (S).
+*/
 resource "aws_dynamodb_table" "terraform-lock" {
     name           = "terraform_state"
     read_capacity  = 5
