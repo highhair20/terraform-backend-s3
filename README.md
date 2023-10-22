@@ -45,36 +45,77 @@ of the state file.
 
 
 ## Before You Begin
+### Create an IAM User 
+1. It is best practice to create a Terraform service user with minimum permissions specific to the given project. 
+For this project I created an IAM user called ```tf-svc-user-base```.
+2. Add the following policy to your newly created user:
+```
 {
     "Version": "2012-10-17",
     "Statement": [
         {
+            "Sid": "Statement1",
             "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::634157847749:user/jason"
-            },
-            "Action": "s3:ListBucket",
-            "Resource": "arn:aws:s3:::glolabs-terraform-state"
-        },
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::634157847749:user/jason"
-            },
             "Action": [
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:DeleteObject"
+                "dynamodb:CreateTable",
+                "dynamodb:DeleteTable",
+                "dynamodb:DescribeTable",
+                "dynamodb:DescribeContinuousBackups",
+                "dynamodb:DescribeTimeToLive",
+                "dynamodb:ListTagsOfResource",
+                "dynamodb:TagResource",
+                "kms:CreateKey",
+                "kms:DescribeKey",
+                "kms:GetKeyPolicy",
+                "kms:GetKeyRotationStatus",
+                "kms:ListResourceTags",
+                "kms:ListResourceTags",
+                "kms:ScheduleKeyDeletion",
+                "s3:CreateBucket",
+                "s3:DeleteBucketPolicy",
+                "s3:DeleteBucket",
+                "s3:GetAccelerateConfiguration",
+                "s3:GetBucketAcl",
+                "s3:GetBucketCORS",
+                "s3:GetBucketLogging",
+                "s3:GetBucketObjectLockConfiguration",
+                "s3:GetBucketOwnershipControls",
+                "s3:GetBucketPolicy",
+                "s3:GetBucketRequestPayment",
+                "s3:GetBucketTagging",
+                "s3:GetBucketVersioning",
+                "s3:GetBucketWebsite",
+                "s3:GetEncryptionConfiguration",
+                "s3:GetLifecycleConfiguration",
+                "s3:GetReplicationConfiguration",
+                "s3:ListBucket",
+                "s3:PutBucketTagging",
+                "s3:PutBucketObjectLockConfiguration",
+                "s3:PutEncryptionConfiguration",
+                "s3:PutBucketOwnershipControls",
+                "s3:PutBucketAcl",
+                "s3:PutBucketVersioning"
             ],
-            "Resource": "arn:aws:s3:::glolabs-terraform-state/*"
+            "Resource": "*"
         }
     ]
 }
+```
+3. For the newly created user under 'Security Credentials', create an 'Access key'. 
+Add the ```aws_access_key_id``` and ```aws_secret_access_key``` to your ```~/.aws/credentials``` file.
 
-Create Your Terraform Backend 
+### Have the following info handy
+You will be prompted when running terraform.
+Alternatively you can can create a ```terraform.tfvars``` file with these values in it. I don't recommend checking it into git.
+   * aws_account_id = "\<YOUR AWS ACCOUNT ID>"
+   * aws_profile = "tf-svc-user-base"
+   * aws_region = "us-east-1"
+   * bucket_name = "\<YOUR PROJECT>-terraform-backend" 
+   
 
-1. Clone this project
-2. Execute Terraform commands
+## Create Your Terraform Backend
+2. Clone this project
+3. Execute Terraform commands
 ```
 cd terraform-backend-s3
 terraform init
@@ -82,14 +123,3 @@ terraform plan
 terraform apply
 ```
 
-
-
-Warning! It is highly recommended that you enable Bucket Versioning on the S3 bucket to allow for state recovery in the case of accidental deletions and human error.
-
-
-
-Instead, use the variable “shared_credentials_file” and if you have several profiles like in my case the variable “profile”.
-
-```
-terraform init
-```

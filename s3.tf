@@ -1,5 +1,3 @@
-
-
 resource "aws_s3_bucket" "backend" {
   bucket = "${var.bucket_name}"
   object_lock_enabled = true
@@ -18,6 +16,7 @@ resource "aws_s3_bucket_ownership_controls" "backend" {
 resource "aws_s3_bucket_acl" "backend" {
   bucket = aws_s3_bucket.backend.id
   acl    = "private"
+  depends_on = [aws_s3_bucket_ownership_controls.backend]
 }
 resource "aws_s3_bucket_versioning" "backend" {
   bucket = aws_s3_bucket.backend.id
