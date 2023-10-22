@@ -1,6 +1,3 @@
-@todo - define permissions in tf-svc-policy
-
-
 # terraform-backend-s3
 ___
 
