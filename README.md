@@ -44,7 +44,7 @@ of the state file.
 ## Before You Begin
 ### Create an IAM User 
 1. It is best practice to create a Terraform service user with minimum permissions specific to the given project. 
-For this project I created an IAM user called ```tf-svc-user-base```.
+For this project I created an IAM user called ```tf-svc-user-state```.
 2. Add the following policy to your newly created user:
 ```
 {
@@ -105,7 +105,7 @@ Add the ```aws_access_key_id``` and ```aws_secret_access_key``` to your ```~/.aw
 You will be prompted when running terraform.
 Alternatively you can can create a ```terraform.tfvars``` file with these values in it. I don't recommend checking it into git.
    * aws_account_id = "\<YOUR AWS ACCOUNT ID>"
-   * aws_profile = "tf-svc-user-base"
+   * aws_profile = "tf-svc-user-state"
    * aws_region = "us-east-1"
    * bucket_name = "\<YOUR PROJECT>-terraform-backend" 
    
