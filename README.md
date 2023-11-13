@@ -103,8 +103,7 @@ Add the ```aws_access_key_id``` and ```aws_secret_access_key``` to your ```~/.aw
 
 ### Have the following info handy
 You will be prompted when running terraform.
-Alternatively you can can create a ```terraform.tfvars``` file with these values in it. I don't recommend checking it into git.
-   * aws_account_id = "\<YOUR AWS ACCOUNT ID>"
+Alternatively you can create a ```terraform.tfvars``` file with these values in it. I don't recommend checking it into git.
    * aws_profile = "tf-svc-user-state"
    * aws_region = "us-east-1"
    * bucket_name = "\<YOUR PROJECT>-terraform-backend" 
