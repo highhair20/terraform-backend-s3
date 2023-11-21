@@ -1,8 +1,8 @@
 resource "aws_s3_bucket" "backend" {
-  bucket = "${var.bucket_name}"
+  bucket = "${var.s3_bucket}"
   object_lock_enabled = true
   tags = {
-    Name = "${var.bucket_name}"
+    Name = "${var.s3_bucket}"
   }
 }
 # Resource to avoid error "AccessControlListNotSupported: The bucket does not allow ACLs"

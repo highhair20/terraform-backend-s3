@@ -40,13 +40,14 @@ of the state file.
 
 3. ___Lease Mechanism___: DynamoDB is used to implement a lease mechanism for the state lock. When a user or process acquires the lock, it's essentially leasing the lock for a specific duration. If the user or process crashes or fails to release the lock due to some issue, the lease ensures that the lock eventually becomes available for other users or processes.
 
+The s3 and DynamoDB resources created in this project can hold the state of an unlimited number of projects.
 
 ## Before You Begin
 ### Create an IAM User 
 1. It is best practice to create a Terraform service user with minimum permissions specific to the given project. 
 For this project I created an IAM user called ```tf-svc-user-state```.
 2. Add the following policy to your newly created user:
-```
+```json
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -100,13 +101,38 @@ For this project I created an IAM user called ```tf-svc-user-state```.
 ```
 3. For the newly created user under 'Security Credentials', create an 'Access key'. 
 Add the ```aws_access_key_id``` and ```aws_secret_access_key``` to your ```~/.aws/credentials``` file.
-
+4. Finally, I created an IAM User Group called ```tf-svc-group```. I added the following
+policy to the group. Any project I create in the future will have a specific IAM service user 
+that will be added to this group.
+```json
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "Statement1",
+			"Effect": "Allow",
+			"Action": [
+				"dynamodb:DeleteItem",
+				"dynamodb:GetItem",
+				"dynamodb:PutItem",
+				"kms:Decrypt",
+				"kms:GenerateDataKey",
+				"s3:GetObject",
+				"s3:ListBucket",
+				"s3:PutBucketObjectLockConfiguration",
+				"s3:PutObject"
+			],
+			"Resource": "*"
+		}
+	]
+}
+```
 ### Have the following info handy
 You will be prompted when running terraform.
 Alternatively you can create a ```terraform.tfvars``` file with these values in it. I don't recommend checking it into git.
    * aws_profile = "tf-svc-user-state"
    * aws_region = "us-east-1"
-   * bucket_name = "\<YOUR PROJECT>-terraform-backend" 
+   * s3_bucket = "\<YOUR PROJECT>-terraform-backend" 
    
 
 ## Create Your Terraform Backend
