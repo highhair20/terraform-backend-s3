@@ -1,11 +1,15 @@
+variable "aws_account_id" {
+  type = string
+}
+
 variable "aws_profile" {
-  type    = string
+  type = string
 }
 
 variable "aws_region" {
-  type    = string
+  type = string
 }
 
 variable "s3_bucket" {
-  type    = string
+  type = string
 }

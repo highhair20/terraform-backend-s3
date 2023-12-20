@@ -10,7 +10,6 @@ terraform {
   backend "s3" {
     profile         = "tf-svc-user-sample-project-a"
     region          = "us-east-1"
-    bucket          = "glolabs-terraform-backend"
     dynamodb_table  = "terraform_state"
   }
 }

@@ -1,5 +1,5 @@
-variable "project_name" {
-  type    = string
+variable "aws_account_id" {
+    type = "string
 }
 
 variable "aws_profile" {
@@ -9,3 +9,8 @@ variable "aws_profile" {
 variable "aws_region" {
   type    = string
 }
+
+variable "project_name" {
+  type    = string
+}
+

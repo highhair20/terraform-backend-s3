@@ -96,7 +96,7 @@ resource "aws_route_table_association" "b" {
  route_table_id = "${aws_route_table.this.id}"
 }
 
-
+// Dynamically get the latest and greatest ami.
 data "aws_ami" "selected" {
   filter {
     name   = "state"
@@ -133,20 +133,3 @@ resource "aws_instance" "this" {
   Name = "${var.project_name}"
  }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

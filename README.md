@@ -38,37 +38,47 @@ the lock is released.
 multiple Terraform users or concurrent operations. It prevents race conditions and potential corruption 
 of the state file.
 
-3. ___Lease Mechanism___: DynamoDB is used to implement a lease mechanism for the state lock. When a user or process acquires the lock, it's essentially leasing the lock for a specific duration. If the user or process crashes or fails to release the lock due to some issue, the lease ensures that the lock eventually becomes available for other users or processes.
+3. ___Lease Mechanism___: DynamoDB is used to implement a lease mechanism for the state lock. When a user or process 
+acquires the lock, it's essentially leasing the lock for a specific duration. If the user or process crashes or fails 
+4. to release the lock due to some issue, the lease ensures that the lock eventually becomes available for other users 
+5. or processes.
 
 The s3 and DynamoDB resources created in this project can hold the state of an unlimited number of projects.
 
 ## Before You Begin
 ### Create an IAM User 
 1. It is best practice to create a Terraform service user with minimum permissions specific to the given project. 
-For this project I created an IAM user called ```tf-svc-user-state```.
-2. Add the following policy to your newly created user:
+For this project I created an IAM user called ```tf-svc-user``` with no permissions. I will handle permissions later
+with roles which will be assumed by the ```tf-svc-user``` IAM User as required.
+2. For the newly created user under 'Security Credentials', create an 'Access key'. 
+Add the ```aws_access_key_id``` and ```aws_secret_access_key``` to your ```~/.aws/credentials``` file.
+3. Rather than assigning the service user permissions directly I created different roles for each project. 
+This allows me to use the same user and assume the role for the project. 
+Create the following role:
 ```json
 {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "Statement1",
+            "Sid": "DynamoStatement",
             "Effect": "Allow",
             "Action": [
                 "dynamodb:CreateTable",
                 "dynamodb:DeleteTable",
-                "dynamodb:DescribeTable",
                 "dynamodb:DescribeContinuousBackups",
+                "dynamodb:DescribeTable",
                 "dynamodb:DescribeTimeToLive",
                 "dynamodb:ListTagsOfResource",
-                "dynamodb:TagResource",
-                "kms:CreateKey",
-                "kms:DescribeKey",
-                "kms:GetKeyPolicy",
-                "kms:GetKeyRotationStatus",
-                "kms:ListResourceTags",
-                "kms:ListResourceTags",
-                "kms:ScheduleKeyDeletion",
+                "dynamodb:TagResource"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:*:<YOUR AWS ACCOUNT ID>:table/terraform_state"
+            ]
+        },
+        {
+            "Sid": "s3Statement",
+            "Effect": "Allow",
+            "Action": [
                 "s3:CreateBucket",
                 "s3:DeleteBucketPolicy",
                 "s3:DeleteBucket",
@@ -94,45 +104,62 @@ For this project I created an IAM user called ```tf-svc-user-state```.
                 "s3:PutBucketAcl",
                 "s3:PutBucketVersioning"
             ],
-            "Resource": "*"
+            "Resource": [
+                "arn:aws:s3:::*-terraform-backend"
+            ]
+        },
+        {
+            "Sid": "KMSStatement",
+            "Effect": "Allow",
+            "Action": [
+                "kms:CreateKey",
+                "kms:DescribeKey",
+                "kms:GetKeyPolicy",
+                "kms:GetKeyRotationStatus",
+                "kms:ListResourceTags",
+                "kms:ListResourceTags",
+                "kms:ScheduleKeyDeletion"
+            ],
+            "Resource": [
+                "arn:aws:kms:*:<YOUR AWS ACCOUNT ID>:key/*"
+            ]
+        },
+        {
+            "Sid": "KMSStatement2",
+            "Effect": "Allow",
+            "Action": [
+                "kms:CreateKey"
+            ],
+            "Resource": [
+                "*"
+            ]
         }
     ]
 }
 ```
-3. For the newly created user under 'Security Credentials', create an 'Access key'. 
-Add the ```aws_access_key_id``` and ```aws_secret_access_key``` to your ```~/.aws/credentials``` file.
-4. Finally, I created an IAM User Group called ```tf-svc-group```. I added the following
-policy to the group. Any project I create in the future will have a specific IAM service user 
-that will be added to this group.
+Define a trust relationship for the role:
 ```json
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "Statement1",
-			"Effect": "Allow",
-			"Action": [
-				"dynamodb:DeleteItem",
-				"dynamodb:GetItem",
-				"dynamodb:PutItem",
-				"kms:Decrypt",
-				"kms:GenerateDataKey",
-				"s3:GetObject",
-				"s3:ListBucket",
-				"s3:PutBucketObjectLockConfiguration",
-				"s3:PutObject"
-			],
-			"Resource": "*"
-		}
-	]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::<YOUR AWS ACCOUNT ID>:user/tf-svc-user"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
 }
 ```
+
 ### Have the following info handy
 You will be prompted when running terraform.
 Alternatively you can create a ```terraform.tfvars``` file with these values in it. I don't recommend checking it into git.
-   * aws_profile = "tf-svc-user-state"
+   * aws_account_id = "\<YOUR AWS ACCOUNT ID>"
+   * aws_profile = "tf-svc-user"
    * aws_region = "us-east-1"
-   * s3_bucket = "\<YOUR PROJECT>-terraform-backend" 
+   * s3_bucket = "\<UNIQUE PREFIX>-terraform-backend" 
    
 
 ## Create Your Terraform Backend
@@ -145,9 +172,32 @@ terraform plan
 terraform apply
 ```
 
-
+## Test the Terraform Backend
+To see how s3 and DynamoDB handle terraform backend state let's create two projects. 
 ```
+cd 
 terraform init -backend-config=backend.conf
 terraform plan 
 terraform apply
 ```
+
+
+AWS CLI to get the account id:
+```aws sts get-caller-identity --output text --query Account --profile tf-svc-user```
+
+
+
+
+== Stuff I didn't need
+
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "Statement1",
+			"Effect": "Allow",
+			"Action": "sts:AssumeRole",
+			"Resource": "arn:aws:iam::634157847740:role/tf-svc-role-*"
+		}
+	]
+}
