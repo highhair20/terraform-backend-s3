@@ -40,121 +40,180 @@ of the state file.
 
 3. ___Lease Mechanism___: DynamoDB is used to implement a lease mechanism for the state lock. When a user or process 
 acquires the lock, it's essentially leasing the lock for a specific duration. If the user or process crashes or fails 
-4. to release the lock due to some issue, the lease ensures that the lock eventually becomes available for other users 
-5. or processes.
+to release the lock due to some issue, the lease ensures that the lock eventually becomes available for other users 
+or processes.
 
 The s3 and DynamoDB resources created in this project can hold the state of an unlimited number of projects.
 
 ## Before You Begin
+In the AWS Console... 
 ### Create an IAM User 
-1. It is best practice to create a Terraform service user with minimum permissions specific to the given project. 
-For this project I created an IAM user called ```tf-svc-user``` with no permissions. I will handle permissions later
-with roles which will be assumed by the ```tf-svc-user``` IAM User as required.
-2. For the newly created user under 'Security Credentials', create an 'Access key'. 
-Add the ```aws_access_key_id``` and ```aws_secret_access_key``` to your ```~/.aws/credentials``` file.
-3. Rather than assigning the service user permissions directly I created different roles for each project. 
-This allows me to use the same user and assume the role for the project. 
-Create the following role:
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "DynamoStatement",
-            "Effect": "Allow",
-            "Action": [
-                "dynamodb:CreateTable",
-                "dynamodb:DeleteTable",
-                "dynamodb:DescribeContinuousBackups",
-                "dynamodb:DescribeTable",
-                "dynamodb:DescribeTimeToLive",
-                "dynamodb:ListTagsOfResource",
-                "dynamodb:TagResource"
-            ],
-            "Resource": [
-                "arn:aws:dynamodb:*:<YOUR AWS ACCOUNT ID>:table/terraform_state"
-            ]
-        },
-        {
-            "Sid": "s3Statement",
-            "Effect": "Allow",
-            "Action": [
-                "s3:CreateBucket",
-                "s3:DeleteBucketPolicy",
-                "s3:DeleteBucket",
-                "s3:GetAccelerateConfiguration",
-                "s3:GetBucketAcl",
-                "s3:GetBucketCORS",
-                "s3:GetBucketLogging",
-                "s3:GetBucketObjectLockConfiguration",
-                "s3:GetBucketOwnershipControls",
-                "s3:GetBucketPolicy",
-                "s3:GetBucketRequestPayment",
-                "s3:GetBucketTagging",
-                "s3:GetBucketVersioning",
-                "s3:GetBucketWebsite",
-                "s3:GetEncryptionConfiguration",
-                "s3:GetLifecycleConfiguration",
-                "s3:GetReplicationConfiguration",
-                "s3:ListBucket",
-                "s3:PutBucketTagging",
-                "s3:PutBucketObjectLockConfiguration",
-                "s3:PutEncryptionConfiguration",
-                "s3:PutBucketOwnershipControls",
-                "s3:PutBucketAcl",
-                "s3:PutBucketVersioning"
-            ],
-            "Resource": [
-                "arn:aws:s3:::*-terraform-backend"
-            ]
-        },
-        {
-            "Sid": "KMSStatement",
-            "Effect": "Allow",
-            "Action": [
-                "kms:CreateKey",
-                "kms:DescribeKey",
-                "kms:GetKeyPolicy",
-                "kms:GetKeyRotationStatus",
-                "kms:ListResourceTags",
-                "kms:ListResourceTags",
-                "kms:ScheduleKeyDeletion"
-            ],
-            "Resource": [
-                "arn:aws:kms:*:<YOUR AWS ACCOUNT ID>:key/*"
-            ]
-        },
-        {
-            "Sid": "KMSStatement2",
-            "Effect": "Allow",
-            "Action": [
-                "kms:CreateKey"
-            ],
-            "Resource": [
-                "*"
-            ]
-        }
-    ]
-}
-```
-Define a trust relationship for the role:
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::<YOUR AWS ACCOUNT ID>:user/tf-svc-user"
+It is best practice to create a Terraform service user with minimum permissions specific to the given project. 
+I created an IAM user called ```tf-svc-user``` whose default permissions will only allow it to create and manage
+a remote backend for other projects. Any project specific permissions will be independently defined and then assumed 
+by the ```tf-svc-user``` as part of that project.  
+1. In the AWS console go to "IAM" > "Users" > "Create user"
+2. Enter a username such as ```tf-svc-user``` and click "Next" > "Next" > "Create user"
+3. Click on the newly created user and go to "Add permissions" > "Create inline policy" > "JSON".
+4. Paste the following permissions:
+    ```json
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "s3:ListBucket"
+                ],
+                "Resource": "arn:aws:s3:::<UNIQUE PREFIX>-terraform-backend"
             },
-            "Action": "sts:AssumeRole"
-        }
-    ]
-}
-```
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:DeleteObject"
+                ],
+                "Resource": "arn:aws:s3:::<UNIQUE PREFIX>-terraform-backend/*"
+            },
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "dynamodb:DescribeTable",
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:DeleteItem"
+                ],
+                "Resource": "arn:aws:dynamodb:*:*:table/terraform_state"
+            },
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "kms:Decrypt",
+                    "kms:GenerateDataKey"
+                ],
+                "Resource": [
+                    "arn:aws:kms:*:*:key/*"
+                ]
+            }
+        ]
+    }
+    ```
+5. Click "Next", provide a meaning policy name such as ```tf-svc-policy-maintainstate``` and click "Create policy" 
+6. For the newly created user go to "Security Credentials" > "Access key" and add the ```aws_access_key_id``` 
+   and ```aws_secret_access_key``` to your local ```~/.aws/credentials``` file.
+
+### Create an IAM Role 
+Create a role so that ```tf-svc-user``` can create the resources for the remote backend.
+1. In the AWS console click "Create role" > "Custom trust policy" and paste the following json. This  
+   establishes a trust relationship with the terraform service user and the role that allows the creation of the 
+   resources required for the backend s3.
+   ```json
+   {
+       "Version": "2012-10-17",
+       "Statement": [
+           {
+               "Effect": "Allow",
+               "Principal": {
+                   "AWS": "arn:aws:iam::<YOUR AWS ACCOUNT ID>:user/tf-svc-user"
+               },
+               "Action": "sts:AssumeRole"
+           }
+       ]
+   }
+   ```
+2. Click "Next" > "Next"
+3. Enter a Role name such as ```tf-svc-role-state``` and click "Create role"
+4. Locate the role you just created and click "Add permissions" > "Create inline policy" > "JSON"
+   (Why didn't AWS include this step in the "create role" flow? I don't know why. I will ask.)
+   Paste the following JSON. Make sure and replace "\<YOUR AWS ACCOUNT ID>" with your 
+   actual AWS account id:
+   ```json
+   {
+       "Version": "2012-10-17",
+       "Statement": [
+           {
+               "Sid": "DynamoStatement",
+               "Effect": "Allow",
+               "Action": [
+                   "dynamodb:CreateTable",
+                   "dynamodb:DeleteTable",
+                   "dynamodb:DescribeContinuousBackups",
+                   "dynamodb:DescribeTable",
+                   "dynamodb:DescribeTimeToLive",
+                   "dynamodb:ListTagsOfResource",
+                   "dynamodb:TagResource"
+               ],
+               "Resource": [
+                   "arn:aws:dynamodb:*:<YOUR AWS ACCOUNT ID>:table/terraform_state"
+               ]
+           },
+           {
+               "Sid": "s3Statement",
+               "Effect": "Allow",
+               "Action": [
+                   "s3:CreateBucket",
+                   "s3:DeleteBucketPolicy",
+                   "s3:DeleteBucket",
+                   "s3:GetAccelerateConfiguration",
+                   "s3:GetBucketAcl",
+                   "s3:GetBucketCORS",
+                   "s3:GetBucketLogging",
+                   "s3:GetBucketObjectLockConfiguration",
+                   "s3:GetBucketOwnershipControls",
+                   "s3:GetBucketPolicy",
+                   "s3:GetBucketRequestPayment",
+                   "s3:GetBucketTagging",
+                   "s3:GetBucketVersioning",
+                   "s3:GetBucketWebsite",
+                   "s3:GetEncryptionConfiguration",
+                   "s3:GetLifecycleConfiguration",
+                   "s3:GetReplicationConfiguration",
+                   "s3:ListBucket",
+                   "s3:PutBucketTagging",
+                   "s3:PutBucketObjectLockConfiguration",
+                   "s3:PutEncryptionConfiguration",
+                   "s3:PutBucketOwnershipControls",
+                   "s3:PutBucketAcl",
+                   "s3:PutBucketVersioning"
+               ],
+               "Resource": [
+                   "arn:aws:s3:::*-terraform-backend"
+               ]
+           },
+           {
+               "Sid": "KMSStatement",
+               "Effect": "Allow",
+               "Action": [
+                   "kms:CreateKey",
+                   "kms:DescribeKey",
+                   "kms:GetKeyPolicy",
+                   "kms:GetKeyRotationStatus",
+                   "kms:ListResourceTags",
+                   "kms:ListResourceTags",
+                   "kms:ScheduleKeyDeletion"
+               ],
+               "Resource": [
+                   "arn:aws:kms:*:<YOUR AWS ACCOUNT ID>:key/*"
+               ]
+           },
+           {
+               "Sid": "KMSStatement2",
+               "Effect": "Allow",
+               "Action": [
+                   "kms:CreateKey"
+               ],
+               "Resource": [
+                   "*"
+               ]
+           }
+       ]
+   }
+   ```
+5. Click "Next". Give the policy a name such as ```tf-svc-policy-state``` and click > "Create policy".
 
 ### Have the following info handy
-You will be prompted when running terraform.
+You will be prompted for the following when running terraform.
 Alternatively you can create a ```terraform.tfvars``` file with these values in it. I don't recommend checking it into git.
    * aws_account_id = "\<YOUR AWS ACCOUNT ID>"
    * aws_profile = "tf-svc-user"
@@ -163,19 +222,23 @@ Alternatively you can create a ```terraform.tfvars``` file with these values in 
    
 
 ## Create Your Terraform Backend
-2. Clone this project
-3. Execute Terraform commands
+1. Clone this project
+2. Execute Terraform commands
 ```
 cd terraform-backend-s3
 terraform init
 terraform plan
 terraform apply
 ```
+That's it. You should now have an s3 bucket for storing backend state and a DynamoDB table for 
+locking the state so no two users can change it at the same time.
 
-## Test the Terraform Backend
-To see how s3 and DynamoDB handle terraform backend state let's create two projects. 
+## See it in action
+This section is optional and is only to see how objects manifest themselves in s3 and Dynamo
+for actual projects. To see how s3 and DynamoDB handle terraform backend state let's create two projects.
+From the root of the project:
 ```
-cd 
+cd sample_project/sample-project-a
 terraform init -backend-config=backend.conf
 terraform plan 
 terraform apply
