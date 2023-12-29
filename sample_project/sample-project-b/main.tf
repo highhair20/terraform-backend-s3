@@ -1,7 +1,6 @@
 terraform {
   backend "s3" {
     profile         = "tf-svc-user"
-    region          = "us-east-1"
     dynamodb_table  = "terraform_state"
   }
 }
