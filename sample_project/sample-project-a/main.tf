@@ -11,6 +11,5 @@ module "sample_project_module_resources" {
 
   aws_account_id = var.aws_account_id
   project_name = var.project_name
-  aws_profile = var.aws_profile
   aws_region = var.aws_region
 }

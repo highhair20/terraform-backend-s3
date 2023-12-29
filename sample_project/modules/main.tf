@@ -1,5 +1,5 @@
 provider "aws" {
-  profile = "${var.aws_profile}"
+  profile = "tf-svc-user"
   region = "${var.aws_region}"
 
   assume_role {

@@ -53,7 +53,7 @@ I created an IAM user called ```tf-svc-user``` whose default permissions will on
 a remote backend for other projects. Any project specific permissions will be independently defined and then assumed 
 by the ```tf-svc-user``` as part of that project.  
 1. In the AWS console go to "IAM" > "Users" > "Create user"
-2. Enter a username such as ```tf-svc-user``` and click "Next" > "Next" > "Create user"
+2. Enter a username named ```tf-svc-user``` and click "Next" > "Next" > "Create user"
 3. Click on the newly created user and go to "Add permissions" > "Create inline policy" > "JSON".
 4. Paste the following permissions:
     ```json
@@ -99,7 +99,7 @@ by the ```tf-svc-user``` as part of that project.
         ]
     }
     ```
-5. Click "Next", provide a meaning policy name such as ```tf-svc-policy-maintainstate``` and click "Create policy" 
+5. Click "Next", provide a meaning policy name such as ```tf-svc-policy-state``` and click "Create policy" 
 6. For the newly created user go to "Security Credentials" > "Access key" and add the ```aws_access_key_id``` 
    and ```aws_secret_access_key``` to your local ```~/.aws/credentials``` file.
 
@@ -215,11 +215,11 @@ Create a role so that ```tf-svc-user``` can create the resources for the remote 
 ### Have the following info handy
 You will be prompted for the following when running terraform.
 Alternatively you can create a ```terraform.tfvars``` file with these values in it. I don't recommend checking it into git.
-   * aws_account_id = "\<YOUR AWS ACCOUNT ID>"
-   * aws_profile = "tf-svc-user"
-   * aws_region = "us-east-1"
-   * s3_bucket = "\<UNIQUE PREFIX>-terraform-backend" 
-   
+```json
+aws_account_id = "<YOUR AWS ACCOUNT ID>"
+aws_region = "us-east-1"
+s3_bucket = "<UNIQUE PREFIX>-terraform-backend"
+```
 
 ## Create Your Terraform Backend
 1. Clone this project
