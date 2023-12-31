@@ -238,9 +238,10 @@ locking the state so no two users can change it at the same time.
 This section is optional and is only to see how objects and state manifest themselves in s3 and DynamoDB
 for actual projects. 
 
-For a detailed walk-through of sample projects go [here](sample_project/README.md).
+For a detailed walk-through of setting up the sample projects go 
+[here](sample_project/README.md).
 
-Once you are done your s3 bucket should looks something like:
+Once you are done your s3 bucket should look something like:
 
 ![S3 bucket containing two sample projects](https://highhair20-github-images.s3.amazonaws.com/terraform-backend-s3/dynamodb.png)
 
