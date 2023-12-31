@@ -100,8 +100,9 @@ by the ```tf-svc-user``` as part of that project.
     }
     ```
 5. Click "Next", provide a meaning policy name such as ```tf-svc-policy-state``` and click "Create policy" 
-6. For the newly created user go to "Security Credentials" > "Access key" and add the ```aws_access_key_id``` 
-   and ```aws_secret_access_key``` to your local ```~/.aws/credentials``` file.
+6. For the newly created user go to 
+   "Security Credentials" > "Access keys" > "Create access key" > "Other" > "Next" > "Create access key" 
+   and add the ```aws_access_key_id``` and ```aws_secret_access_key``` to your local ```~/.aws/credentials``` file.
 
 ### Create an IAM Role 
 Create a role so that ```tf-svc-user``` can create the resources for the remote backend.
@@ -115,7 +116,8 @@ Create a role so that ```tf-svc-user``` can create the resources for the remote 
            {
                "Effect": "Allow",
                "Principal": {
-                   "AWS": "arn:aws:iam::<YOUR AWS ACCOUNT ID>:user/tf-svc-user"
+                   "AWS": "arn:aws:iam::<YOUR AWS ACCOUNT ID>:user/tf-svc-user",
+                    # "AWS": "AIDAZHJWA2TCW67LKNU6B"
                },
                "Action": "sts:AssumeRole"
            }
@@ -234,33 +236,35 @@ That's it. You should now have an s3 bucket for storing backend state and a Dyna
 locking the state so no two users can change it at the same time.
 
 ## See it in action
-This section is optional and is only to see how objects manifest themselves in s3 and Dynamo
-for actual projects. To see how s3 and DynamoDB handle terraform backend state let's create two projects.
-From the root of the project:
-```
-cd sample_project/sample-project-a
-terraform init -backend-config=backend.conf
-terraform plan 
-terraform apply
-```
+This section is optional and is only to see how objects and state manifest themselves in s3 and DynamoDB
+for actual projects. 
+
+For a detailed walk-through of sample projects go [here](sample_project/README.md).
+
+Once you are done your s3 bucket should looks something like:
+
+![S3 bucket containing two sample projects](https://highhair20-github-images.s3.amazonaws.com/terraform-backend-s3/dynamodb.png)
 
 
-AWS CLI to get the account id:
-```aws sts get-caller-identity --output text --query Account --profile tf-svc-user```
+and your DynamoDB table should look something like:
+
+![DynamoDB table containing two sample projects](https://highhair20-github-images.s3.amazonaws.com/terraform-backend-s3/dynamodb.png)
 
 
+## Good things to know
+### How to start over
+You may have created your state bucket and added some test projects but want to start fresh.
+You might think that you can simply run ```terraform destroy``` and, boom, you're done.
+However, that's not the case. 
 
+Due to the proper configuration of managing remote state, we are keeping a history in s3 which prevents
+```terraform destroy``` from completing successfully due to the s3 versions that are saved.
+To get past this you have to delete the versions manually. To do so:
+1. In s3 click on the bucket containing your state.
+2. Click on the Object you wish to delete. 
+3. Click on the "Show versions" slider near the search bar.
+4. To "select all" click the checkbox near "Name".
+5. Click "Delete".
+6. Sroll to the bottom. Type "permanently delete" in the text box and click "Delete objects".
 
-== Stuff I didn't need
-
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "Statement1",
-			"Effect": "Allow",
-			"Action": "sts:AssumeRole",
-			"Resource": "arn:aws:iam::634157847740:role/tf-svc-role-*"
-		}
-	]
-}
+Follow the previous steps to delete all other objects from the bucket.
