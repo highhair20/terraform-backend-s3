@@ -243,7 +243,7 @@ For a detailed walk-through of setting up the sample projects go
 
 Once you are done your s3 bucket should look something like:
 
-![S3 bucket containing two sample projects](https://highhair20-github-images.s3.amazonaws.com/terraform-backend-s3/dynamodb.png)
+![S3 bucket containing two sample projects](https://highhair20-github-images.s3.amazonaws.com/terraform-backend-s3/s3.png)
 
 
 and your DynamoDB table should look something like:
