@@ -6,6 +6,6 @@ variable "aws_region" {
   type = string
 }
 
-variable "s3_bucket" {
+variable "project_name" {
   type = string
 }

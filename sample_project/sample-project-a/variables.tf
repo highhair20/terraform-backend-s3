@@ -3,9 +3,9 @@ variable "aws_account_id" {
 }
 
 variable "aws_region" {
-  type = string
+  type    = string
 }
 
-variable "s3_bucket" {
-  type = string
+variable "project_name" {
+  type    = string
 }
