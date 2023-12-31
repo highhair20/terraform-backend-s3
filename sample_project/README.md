@@ -18,7 +18,6 @@ Create a role so that ```tf-svc-user``` can create the resources for the sample 
                "Effect": "Allow",
                "Principal": {
                    "AWS": "arn:aws:iam::<YOUR AWS ACCOUNT ID>:user/tf-svc-user",
-                    # "AWS": "AIDAZHJWA2TCW67LKNU6B"
                },
                "Action": "sts:AssumeRole"
            }

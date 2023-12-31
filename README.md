@@ -117,7 +117,6 @@ Create a role so that ```tf-svc-user``` can create the resources for the remote 
                "Effect": "Allow",
                "Principal": {
                    "AWS": "arn:aws:iam::<YOUR AWS ACCOUNT ID>:user/tf-svc-user",
-                    # "AWS": "AIDAZHJWA2TCW67LKNU6B"
                },
                "Action": "sts:AssumeRole"
            }
@@ -217,7 +216,7 @@ Create a role so that ```tf-svc-user``` can create the resources for the remote 
 ### Have the following info handy
 You will be prompted for the following when running terraform.
 Alternatively you can create a ```terraform.tfvars``` file with these values in it. I don't recommend checking it into git.
-```json
+```
 aws_account_id = "<YOUR AWS ACCOUNT ID>"
 aws_region = "us-east-1"
 s3_bucket = "<UNIQUE PREFIX>-terraform-backend"
