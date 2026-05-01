@@ -9,3 +9,8 @@ variable "aws_region" {
 variable "s3_bucket" {
   type = string
 }
+
+variable "bootstrap_profile" {
+  type    = string
+  default = "tf-bootstrap"
+}
