@@ -39,7 +39,7 @@ policies; S3 bucket and its configuration; DynamoDB table; and KMS key.
 
 ### 3. Create a User in Identity Center
 1. IAM Identity Center → **Users** → **Add user**
-2. Enter your email address and fill in the required fields
+2. Use `terraform-admin` as the username and enter your email address for the remaining required fields
 3. You will receive an email to activate the account — complete that before continuing
 
 ### 4. Assign the User to Your Account
