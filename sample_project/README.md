@@ -1,106 +1,59 @@
-# sample-project
-___
+# Sample Projects
 
-To see how s3 and DynamoDB handle terraform backend state let's create two projects.
+Two sample projects that demonstrate Terraform remote state using the shared S3 backend.
+Each project provisions a VPC, subnets, security group, internet gateway, and a small EC2 instance.
 
 ## Before You Begin
 
-### Create an IAM Role 
-Create a role so that ```tf-svc-user``` can create the resources for the sample projects.
-1. In the AWS console click "Create role" > "Custom trust policy" and paste the following json. This  
-   establishes a trust relationship with the terraform service user and the role that allows the creation of the 
-   resources required for the sample projects.
-   ```json
-   {
-       "Version": "2012-10-17",
-       "Statement": [
-           {
-               "Effect": "Allow",
-               "Principal": {
-                   "AWS": "arn:aws:iam::<YOUR AWS ACCOUNT ID>:user/tf-svc-user"
-               },
-               "Action": "sts:AssumeRole"
-           }
-       ]
-   }
-   ```
-2. Click "Next" > "Next"
-3. Enter a Role name such as ```tf-svc-role-sampleproject``` and click "Create role"
-4. Locate the role you just created and click "Add permissions" > "Create inline policy" > "JSON"
-   Paste the following JSON. Make sure and replace "\<YOUR AWS ACCOUNT ID>" with your 
-   actual AWS account id:
-   ```json
-   {
-       "Version": "2012-10-17",
-       "Statement": [
-           {
-				"Effect": "Allow",
-				"Action": [
-					"ec2:AssociateRouteTable",
-					"ec2:AttachInternetGateway",
-					"ec2:AuthorizeSecurityGroupEgress",
-					"ec2:AuthorizeSecurityGroupIngress",
-					"ec2:CreateInternetGateway",
-					"ec2:CreateRoute",
-					"ec2:CreateRouteTable",
-					"ec2:CreateSecurityGroup",
-					"ec2:CreateSubnet",
-					"ec2:CreateTags",
-					"ec2:CreateVpc",
-					"ec2:DeleteInternetGateway",
-					"ec2:DeleteRouteTable",
-					"ec2:DeleteSecurityGroup",
-					"ec2:DeleteSubnet",
-					"ec2:DeleteVpc",
-					"ec2:DescribeImages",
-					"ec2:DescribeInstances",
-					"ec2:DescribeInstanceAttribute",
-					"ec2:DescribeInstanceCreditSpecifications",
-					"ec2:DescribeInstanceTypes",
-					"ec2:DescribeInternetGateways",
-					"ec2:DescribeNetworkInterfaces",
-					"ec2:DescribeRouteTables",
-					"ec2:DescribeSecurityGroups",
-					"ec2:DescribeSubnets",
-					"ec2:DescribeTags",
-					"ec2:DescribeVolumes",
-					"ec2:DescribeVpcAttribute",
-					"ec2:DescribeVpcs",
-					"ec2:DetachInternetGateway",
-					"ec2:DisassociateRouteTable",
-					"ec2:ModifySubnetAttribute",
-					"ec2:ModifyVpcAttribute",
-					"ec2:RevokeSecurityGroupEgress",
-					"ec2:RunInstances",
-					"ec2:TerminateInstances"
-                ],
-                "Resource": [
-					"*"
-                ]
-           }
-       ]
-   }
-   ```
-5. Click "Next". Give the policy a name such as ```tf-svc-policy-sampleproject``` and click > "Create policy".
+### 1. Bootstrap the backend
+
+The shared backend (S3 bucket, DynamoDB table, KMS key, GitHub OIDC provider) must already
+be deployed. From the repo root:
+
+```bash
+aws sso login --profile terraform-admin
+terraform init
+terraform apply
+```
+
+### 2. Create a per-project IAM role
+
+Run `new-project.sh` from the repo root to create the IAM role and state-access policy for
+the sample project. You need to do this once per project.
+
+```bash
+# Usage: ./new-project.sh <project-name> <github-repo-name>
+./new-project.sh sample-project-a <your-github-repo>
+./new-project.sh sample-project-b <your-github-repo>
+```
+
+The script will print a `backend.hcl` block and the role ARN. Add the role ARN to the
+project's `terraform.tfvars`:
+
+```hcl
+# sample_project/sample-project-a/terraform.tfvars (gitignored)
+aws_account_id = "<YOUR_ACCOUNT_ID>"
+aws_region     = "us-east-1"
+project_name   = "sample-project-a"
+role_arn       = "<ROLE_ARN_FROM_SCRIPT>"
+```
+
+---
 
 ## sample-project-a
-### Execute terraform commands
-From the root of the project:
-```
+
+```bash
 cd sample_project/sample-project-a
 terraform init -backend-config=backend.conf
-terraform plan 
+terraform plan
 terraform apply
 ```
 
 ## sample-project-b
 
-From the root of the project:
-```
+```bash
 cd sample_project/sample-project-b
 terraform init -backend-config=backend.conf
-terraform plan 
+terraform plan
 terraform apply
 ```
-
-

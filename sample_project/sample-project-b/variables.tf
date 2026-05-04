@@ -3,9 +3,14 @@ variable "aws_account_id" {
 }
 
 variable "aws_region" {
-  type    = string
+  type = string
 }
 
 variable "project_name" {
-  type    = string
+  type = string
+}
+
+variable "role_arn" {
+  type        = string
+  description = "ARN of the IAM role to assume when provisioning project resources"
 }

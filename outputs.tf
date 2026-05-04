@@ -5,7 +5,7 @@ output "s3_bucket_name" {
 
 output "dynamodb_table_name" {
   description = "Name of the DynamoDB table used for state locking"
-  value       = aws_dynamodb_table.terraform-lock.name
+  value       = aws_dynamodb_table.terraform_state.name
 }
 
 output "kms_key_arn" {
@@ -13,12 +13,7 @@ output "kms_key_arn" {
   value       = aws_kms_key.backend.arn
 }
 
-output "tf_svc_user_arn" {
-  description = "ARN of the IAM service user used by downstream Terraform projects"
-  value       = aws_iam_user.tf_svc_user.arn
-}
-
-output "tf_svc_role_arn" {
-  description = "ARN of the IAM role assumed by tf-svc-user when provisioning backend resources"
-  value       = aws_iam_role.tf_svc_role_state.arn
+output "oidc_provider_arn" {
+  description = "ARN of the GitHub Actions OIDC identity provider"
+  value       = aws_iam_openid_connect_provider.github.arn
 }

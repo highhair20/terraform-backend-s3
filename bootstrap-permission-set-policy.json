@@ -2,32 +2,45 @@
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "IAM",
+            "Sid": "IAMRoles",
             "Effect": "Allow",
             "Action": [
                 "iam:AttachRolePolicy",
-                "iam:AttachUserPolicy",
-                "iam:CreateAccessKey",
                 "iam:CreatePolicy",
                 "iam:CreatePolicyVersion",
                 "iam:CreateRole",
-                "iam:CreateUser",
-                "iam:DeleteAccessKey",
                 "iam:DeletePolicy",
                 "iam:DeletePolicyVersion",
                 "iam:DeleteRole",
-                "iam:DeleteUser",
+                "iam:DeleteRolePolicy",
                 "iam:DetachRolePolicy",
-                "iam:DetachUserPolicy",
                 "iam:GetPolicy",
                 "iam:GetPolicyVersion",
                 "iam:GetRole",
-                "iam:GetUser",
-                "iam:ListAccessKeys",
+                "iam:GetRolePolicy",
                 "iam:ListAttachedRolePolicies",
-                "iam:ListAttachedUserPolicies",
+                "iam:ListInstanceProfilesForRole",
                 "iam:ListPolicyVersions",
+                "iam:ListRolePolicies",
+                "iam:TagRole",
+                "iam:UntagRole",
                 "iam:UpdateAssumeRolePolicy"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "IAMOIDCProvider",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateOpenIDConnectProvider",
+                "iam:DeleteOpenIDConnectProvider",
+                "iam:GetOpenIDConnectProvider",
+                "iam:ListOpenIDConnectProviders",
+                "iam:TagOpenIDConnectProvider",
+                "iam:UntagOpenIDConnectProvider",
+                "iam:UpdateOpenIDConnectProviderThumbprint",
+                "iam:AddClientIDToOpenIDConnectProvider",
+                "iam:RemoveClientIDFromOpenIDConnectProvider"
             ],
             "Resource": "*"
         },
@@ -41,9 +54,12 @@
                 "dynamodb:DescribeTable",
                 "dynamodb:DescribeTimeToLive",
                 "dynamodb:ListTagsOfResource",
-                "dynamodb:TagResource"
+                "dynamodb:TagResource",
+                "dynamodb:UntagResource",
+                "dynamodb:UpdateContinuousBackups",
+                "dynamodb:UpdateTable"
             ],
-            "Resource": "arn:aws:dynamodb:*:*:table/terraform_state"
+            "Resource": "arn:aws:dynamodb:*:*:table/terraform-state"
         },
         {
             "Sid": "S3",
@@ -59,6 +75,7 @@
                 "s3:GetBucketObjectLockConfiguration",
                 "s3:GetBucketOwnershipControls",
                 "s3:GetBucketPolicy",
+                "s3:GetBucketPublicAccessBlock",
                 "s3:GetBucketRequestPayment",
                 "s3:GetBucketTagging",
                 "s3:GetBucketVersioning",
@@ -67,12 +84,13 @@
                 "s3:GetLifecycleConfiguration",
                 "s3:GetReplicationConfiguration",
                 "s3:ListBucket",
-                "s3:PutBucketAcl",
                 "s3:PutBucketObjectLockConfiguration",
                 "s3:PutBucketOwnershipControls",
+                "s3:PutBucketPublicAccessBlock",
                 "s3:PutBucketTagging",
                 "s3:PutBucketVersioning",
-                "s3:PutEncryptionConfiguration"
+                "s3:PutEncryptionConfiguration",
+                "s3:PutLifecycleConfiguration"
             ],
             "Resource": "arn:aws:s3:::*"
         },
@@ -88,13 +106,18 @@
             "Sid": "KMSManage",
             "Effect": "Allow",
             "Action": [
+                "kms:CreateAlias",
+                "kms:DeleteAlias",
                 "kms:DescribeKey",
+                "kms:EnableKeyRotation",
                 "kms:GetKeyPolicy",
                 "kms:GetKeyRotationStatus",
+                "kms:ListAliases",
                 "kms:ListResourceTags",
+                "kms:PutKeyPolicy",
                 "kms:ScheduleKeyDeletion",
-                "kms:CreateAlias",
-                "kms:DeleteAlias"
+                "kms:TagResource",
+                "kms:UntagResource"
             ],
             "Resource": "*"
         }
