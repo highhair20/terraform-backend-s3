@@ -106,6 +106,8 @@ jobs:
             });
 
       # Applies only on merge to main. Requires a successful plan in the same run.
+      # Recommendation: protect the main branch (require PRs + passing status checks)
+      # so that apply only runs after a reviewed plan, never on a direct push.
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve tfplan

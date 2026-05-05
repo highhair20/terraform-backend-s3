@@ -22,7 +22,7 @@
 # Requirements:
 #   - Run from the root of this repo (terraform-backend-s3)
 #   - terraform apply must have been run at least once so outputs are available
-#   - AWS SSO session must be active: aws sso login --profile terraform-admin
+#   - AWS SSO session must be active: aws sso login --profile <aws-profile>
 # ---------------------------------------------------------------------------
 
 set -euo pipefail
