@@ -22,9 +22,22 @@ jobs:
     #   run:
     #     working-directory: infra
 
+    env:
+      TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Caches downloaded providers keyed on the lock file. Cache is invalidated
+      # automatically when provider versions are updated.
+      - name: Cache Terraform providers
+        uses: actions/cache@v4
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-
 
       # Authenticates using the per-project IAM role created by new-project.sh.
       # No long-lived credentials are stored — GitHub exchanges the OIDC token for

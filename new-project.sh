@@ -60,7 +60,7 @@ fi
 if ! terraform output > /dev/null 2>&1; then
   echo "Error: no Terraform outputs found." >&2
   echo "Ensure terraform apply has been run and your SSO session is active:" >&2
-  echo "  aws sso login --profile terraform-admin" >&2
+  echo "  aws sso login --profile ${BOOTSTRAP_PROFILE}" >&2
   exit 1
 fi
 

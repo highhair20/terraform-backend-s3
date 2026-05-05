@@ -60,7 +60,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "backend" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "backend" {
-  bucket = aws_s3_bucket.backend.id
+  bucket     = aws_s3_bucket.backend.id
+  depends_on = [aws_s3_bucket_versioning.backend]
 
   rule {
     id     = "expire-old-state-versions"
