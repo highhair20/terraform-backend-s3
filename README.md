@@ -82,6 +82,9 @@ github_org        = "<YOUR-GITHUB-ORG>"
 ```bash
 aws sso login --profile terraform-admin
 ```
+> SSO sessions expire after 8–12 hours. If you get authentication errors on a later run,
+> re-run the command above to refresh your credentials.
+
 3. Execute Terraform commands
 ```bash
 cd terraform-backend-s3

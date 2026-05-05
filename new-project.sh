@@ -41,6 +41,11 @@ POLICY_NAME="tf-${PROJECT_NAME}-state-access"
 # ---------------------------------------------------------------------------
 # Validate environment
 # ---------------------------------------------------------------------------
+if ! command -v aws > /dev/null 2>&1; then
+  echo "Error: aws CLI is not installed or not in PATH" >&2
+  exit 1
+fi
+
 if ! terraform version > /dev/null 2>&1; then
   echo "Error: terraform is not installed or not in PATH" >&2
   exit 1

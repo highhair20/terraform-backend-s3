@@ -9,6 +9,7 @@ resource "aws_iam_openid_connect_provider" "github" {
 
   client_id_list = ["sts.amazonaws.com"]
 
-  # Current thumbprint for token.actions.githubusercontent.com
+  # AWS validates GitHub OIDC by issuer URL; the thumbprint is largely ceremonial
+  # for this provider but required by the resource schema.
   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
 }

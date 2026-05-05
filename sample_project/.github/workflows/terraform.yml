@@ -17,9 +17,10 @@ jobs:
     name: Terraform
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: infra  # path to your Terraform root within the repo
+    # If your Terraform files are in a subdirectory, uncomment and set this:
+    # defaults:
+    #   run:
+    #     working-directory: infra
 
     steps:
       - name: Checkout
