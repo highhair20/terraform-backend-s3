@@ -1,13 +1,16 @@
 variable "aws_account_id" {
-  type = string
+  type        = string
+  description = "AWS account ID where project resources are deployed"
 }
 
 variable "aws_region" {
-  type = string
+  type        = string
+  description = "AWS region where project resources are deployed"
 }
 
 variable "project_name" {
-  type = string
+  type        = string
+  description = "Short unique identifier for the project"
 }
 
 variable "role_arn" {

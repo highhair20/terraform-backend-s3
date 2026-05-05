@@ -78,7 +78,7 @@ resource "aws_internet_gateway" "this" {
   }
 }
 
-resource "aws_route_table" "this" {
+resource "aws_route_table" "public" {
   vpc_id = aws_vpc.this.id
 
   route {
@@ -87,21 +87,31 @@ resource "aws_route_table" "this" {
   }
 
   tags = {
-    Name = var.project_name
+    Name = "${var.project_name}-public"
+  }
+}
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.this.id
+
+  tags = {
+    Name = "${var.project_name}-private"
   }
 }
 
 resource "aws_route_table_association" "public" {
   subnet_id      = aws_subnet.public.id
-  route_table_id = aws_route_table.this.id
+  route_table_id = aws_route_table.public.id
 }
 
 resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.private.id
-  route_table_id = aws_route_table.this.id
+  route_table_id = aws_route_table.private.id
 }
 
 data "aws_ami" "selected" {
+  owners = ["amazon"]
+
   filter {
     name   = "state"
     values = ["available"]

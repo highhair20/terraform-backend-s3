@@ -30,7 +30,8 @@ the sample project. You need to do this once per project.
 The script will print a `backend.conf` block and the role ARN.
 
 Copy the printed `backend.conf` content into the project's `backend.conf` file (it is safe
-to commit — it contains no credentials). Add the `key` field to match your project and environment.
+to commit — it contains no credentials). The `key` field defaults to `dev`; update it if
+deploying to a different environment.
 
 Add the role ARN and other values to the project's `terraform.tfvars` (do not commit this file):
 

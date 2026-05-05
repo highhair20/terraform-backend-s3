@@ -65,9 +65,11 @@ jobs:
             -out=tfplan
 
       # Renders the saved plan as human-readable text for the PR comment.
+      # Writes to GITHUB_WORKSPACE (repo root) so the github-script step can read it —
+      # github-script does not inherit working-directory from defaults.run.
       - name: Render Plan
         if: github.event_name == 'pull_request'
-        run: terraform show -no-color tfplan > plan.txt
+        run: terraform show -no-color tfplan > $GITHUB_WORKSPACE/plan.txt
 
       # Posts the plan output as a PR comment so reviewers can see exactly what will change.
       - name: Post Plan to PR
@@ -77,7 +79,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const plan = fs.readFileSync('plan.txt', 'utf8');
+            const plan = fs.readFileSync(process.env.GITHUB_WORKSPACE + '/plan.txt', 'utf8');
             const maxLength = 65000;
             const body = plan.length > maxLength
               ? `#### Terraform Plan\n\`\`\`\n${plan.substring(0, maxLength)}\n...(truncated)\n\`\`\``
