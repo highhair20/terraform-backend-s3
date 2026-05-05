@@ -37,6 +37,10 @@ resource "aws_kms_key" "backend" {
   description             = "Encrypts Terraform state objects in S3"
   deletion_window_in_days = 10
   enable_key_rotation     = true
+
+  tags = {
+    Name = "terraform-backend"
+  }
 }
 
 resource "aws_kms_alias" "backend" {
@@ -61,6 +65,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "backend" {
   rule {
     id     = "expire-old-state-versions"
     status = "Enabled"
+
+    filter {}
 
     noncurrent_version_expiration {
       noncurrent_days = 90

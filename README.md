@@ -35,6 +35,9 @@ policies; S3 bucket and its configuration; DynamoDB table; and KMS key.
 1. IAM Identity Center → **Permission sets** → **Create permission set**
 2. Choose **Custom permission set**
 3. Under **Inline policy**, paste the contents of [`bootstrap-permission-set-policy.json`](bootstrap-permission-set-policy.json)
+   > The S3 actions in this policy are scoped to `arn:aws:s3:::*` because the bucket name
+   > is a user-supplied variable — it is not known at the time the permission set is created.
+   > All other statements are scoped to their specific resource ARNs.
 4. Click **Next** → name it `TerraformBootstrap` → **Create**
 
 ### 3. Create a User in Identity Center

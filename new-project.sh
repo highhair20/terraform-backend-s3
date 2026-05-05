@@ -35,6 +35,12 @@ fi
 PROJECT_NAME="$1"
 GITHUB_REPO="$2"
 BOOTSTRAP_PROFILE="${3:-terraform-admin}"
+
+if [[ ! "$PROJECT_NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  echo "Error: project-name must contain only letters, numbers, hyphens, and underscores" >&2
+  exit 1
+fi
+
 ROLE_NAME="tf-${PROJECT_NAME}"
 POLICY_NAME="tf-${PROJECT_NAME}-state-access"
 
