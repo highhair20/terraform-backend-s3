@@ -22,7 +22,7 @@ Run `new-project.sh` from the repo root to create the IAM role and state-access 
 the sample project. You need to do this once per project.
 
 ```bash
-# Usage: ./new-project.sh <project-name> <github-repo-name>
+# Usage: ./new-project.sh <project-name> <github-repo-name> [aws-profile]
 ./new-project.sh sample-project-a <your-github-repo>
 ./new-project.sh sample-project-b <your-github-repo>
 ```

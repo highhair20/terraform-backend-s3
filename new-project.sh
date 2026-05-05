@@ -227,7 +227,7 @@ fi
 # ---------------------------------------------------------------------------
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "backend.hcl — distribute to the downstream team securely, do NOT commit"
+echo "backend.conf — safe to commit, contains no credentials"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 cat <<EOF
 bucket         = "${S3_BUCKET}"
@@ -246,10 +246,10 @@ echo "${ROLE_ARN}"
 echo "" >&2
 echo "Done. Next steps:" >&2
 echo "" >&2
-echo "  1. Distribute backend.hcl to the downstream team securely" >&2
-echo "     (1Password, AWS Secrets Manager, or equivalent)" >&2
+echo "  1. Copy the backend.conf block above into your project's backend.conf" >&2
+echo "     and commit it — it contains no credentials." >&2
 echo "  2. Add the role ARN to the GitHub Actions workflow (see README)" >&2
-echo "  3. For local dev, add to infra/terraform.tfvars (gitignored):" >&2
+echo "  3. For local dev, add to your project's terraform.tfvars (gitignored):" >&2
 echo "       role_arn = \"${ROLE_ARN}\"" >&2
 echo "" >&2
 echo "  See the README for the full downstream project setup." >&2

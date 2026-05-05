@@ -20,6 +20,7 @@
                 "iam:GetRolePolicy",
                 "iam:ListAttachedRolePolicies",
                 "iam:ListInstanceProfilesForRole",
+                "iam:ListPolicies",
                 "iam:ListPolicyVersions",
                 "iam:ListRolePolicies",
                 "iam:TagRole",

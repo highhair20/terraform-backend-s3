@@ -18,7 +18,7 @@ lock expires automatically, preventing it from being held indefinitely.
 
 This project uses **AWS IAM Identity Center** (formerly AWS SSO) for authentication. Identity Center
 issues short-lived temporary credentials on login — no long-lived access keys are stored on disk.
-The IAM user, role, and policies required to run this project are created by Terraform itself.
+No long-lived IAM credentials are needed — the shared backend infrastructure is created by Terraform itself.
 
 ### 1. Enable IAM Identity Center
 1. In the AWS console search for **IAM Identity Center** and open it
@@ -89,9 +89,8 @@ terraform init
 terraform plan
 terraform apply
 ```
-That's it. Terraform will create the IAM service user, role, customer-managed policies, S3 bucket,
-KMS key, and DynamoDB table. You should now have a fully configured remote backend ready for use
-by any number of projects.
+That's it. Terraform will create the S3 bucket, DynamoDB table, KMS key, and GitHub OIDC provider.
+You should now have a fully configured remote backend ready for use by any number of projects.
 
 ## See it in action
 This section is optional and is only to see how objects and state manifest themselves in s3 and DynamoDB

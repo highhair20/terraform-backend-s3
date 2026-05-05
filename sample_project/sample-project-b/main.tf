@@ -1,7 +1,5 @@
 terraform {
-  backend "s3" {
-    dynamodb_table = "terraform-state"
-  }
+  backend "s3" {}
 }
 
 module "sample_project_module_resources" {
