@@ -136,6 +136,16 @@ resource "aws_instance" "this" {
   vpc_security_group_ids = [aws_security_group.this.id]
   subnet_id              = aws_subnet.public.id
 
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
+
+  root_block_device {
+    volume_type = "gp3"
+  }
+
   user_data = <<-EOF
     #!/bin/bash
     sudo dnf install -y httpd

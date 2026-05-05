@@ -1,0 +1,4 @@
+aws_account_id = "<YOUR AWS ACCOUNT ID>"
+aws_region     = "us-east-1"
+project_name   = "sample-project-a"
+role_arn       = "<ROLE_ARN_FROM_NEW_PROJECT_SH>"

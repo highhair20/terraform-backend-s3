@@ -178,3 +178,6 @@ To get past this you have to delete the versions manually. To do so:
 6. Scroll to the bottom. Type "permanently delete" in the text box and click "Delete objects".
 
 Follow the previous steps to delete all other objects from the bucket.
+
+Once the bucket is empty, run `terraform destroy` to remove all remaining resources
+(DynamoDB table, KMS key, OIDC provider, and the now-empty S3 bucket).
