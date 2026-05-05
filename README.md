@@ -53,7 +53,7 @@ aws configure sso
 ```
 When prompted:
 ```
-SSO session name:               tf-bootstrap
+SSO session name:               terraform-admin
 SSO start URL:                  https://<YOUR-SSO-PORTAL>.awsapps.com/start
 SSO region:                     us-east-1
 SSO registration scopes:        sso:account:access  ← press Enter to accept the default
@@ -61,7 +61,7 @@ SSO account ID:                 <YOUR AWS ACCOUNT ID>
 SSO role name:                  TerraformBootstrap
 CLI default client Region:      us-east-1
 CLI default output format:      json
-CLI profile name:               tf-bootstrap
+CLI profile name:               terraform-admin
 ```
 Your SSO start URL is shown on the IAM Identity Center dashboard under **Settings**.
 
@@ -69,17 +69,18 @@ Your SSO start URL is shown on the IAM Identity Center dashboard under **Setting
 You will be prompted for these values when running Terraform.
 Alternatively, create a `terraform.tfvars` file — do not check it into git.
 ```
-aws_account_id   = "<YOUR AWS ACCOUNT ID>"
-aws_region       = "us-east-1"
-s3_bucket        = "<UNIQUE PREFIX>-tf-state"
-bootstrap_profile = "tf-bootstrap"
+aws_account_id    = "<YOUR AWS ACCOUNT ID>"
+aws_region        = "us-east-1"
+s3_bucket         = "<YOUR-ORG>-tf-state"
+bootstrap_profile = "terraform-admin"
+github_org        = "<YOUR-GITHUB-ORG>"
 ```
 
 ## Create Your Terraform Backend
 1. Clone this project
 2. Log in with your bootstrap profile
 ```bash
-aws sso login --profile tf-bootstrap
+aws sso login --profile terraform-admin
 ```
 3. Execute Terraform commands
 ```bash
@@ -108,6 +109,52 @@ and your DynamoDB table should look something like:
 
 ![DynamoDB table containing two sample projects](https://highhair20-github-images.s3.amazonaws.com/terraform-backend-s3/dynamodb.png)
 
+
+## Multi-environment projects
+
+The S3 state key is structured as `<project-name>/<env>/terraform.tfstate`, so a single bucket
+cleanly holds state for every project and environment without any naming collisions.
+
+The IAM role created by `new-project.sh` (`tf-<project-name>`) is **project-scoped** — it grants
+access to all state keys under that project prefix, regardless of environment. Dev and prod
+deployments share the same role.
+
+To deploy a project to multiple environments, create one `backend.conf` file per environment:
+
+```
+backend-dev.conf
+backend-staging.conf
+backend-prod.conf
+```
+
+Each file is identical except for the `key`:
+
+```hcl
+# backend-prod.conf
+bucket         = "<YOUR-ORG>-tf-state"
+dynamodb_table = "terraform-state"
+kms_key_id     = "<KMS-KEY-ARN>"
+region         = "us-east-1"
+encrypt        = true
+key            = "<project-name>/prod/terraform.tfstate"
+```
+
+Initialise Terraform with the appropriate file for each environment:
+
+```bash
+terraform init -backend-config=backend-prod.conf
+terraform apply -var-file=prod.tfvars
+```
+
+If you need strict environment isolation at the IAM level (e.g. prevent a dev deployment from
+touching prod state), run `new-project.sh` with an environment suffix:
+
+```bash
+./new-project.sh my-api-prod my-api-repo
+```
+
+This creates a separate `tf-my-api-prod` role whose state policy is scoped exclusively to
+`my-api-prod/*`.
 
 ## Good things to know
 ### How to start over

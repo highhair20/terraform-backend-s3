@@ -1,0 +1,68 @@
+name: Terraform
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Required for GitHub OIDC token issuance
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: infra  # path to your Terraform root within the repo
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Authenticates using the per-project IAM role created by new-project.sh.
+      # No long-lived credentials are stored — GitHub exchanges the OIDC token for
+      # temporary AWS credentials scoped to this role.
+      #
+      # Prerequisites (set in GitHub → Settings → Secrets and variables → Actions):
+      #   TF_ROLE_ARN  (variable) — role ARN output by new-project.sh
+      #   AWS_REGION   (variable) — e.g. us-east-1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.TF_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # backend.conf contains bucket, region, key, dynamodb_table, and kms_key_id.
+      # It is safe to commit — it contains no secrets.
+      # Generate it by running new-project.sh and saving the printed output.
+      - name: Terraform Init
+        run: terraform init -backend-config=backend.conf
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      # Runs on every push and pull request. Produces a plan without applying.
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var="aws_account_id=${{ vars.AWS_ACCOUNT_ID }}" \
+            -var="aws_region=${{ vars.AWS_REGION }}" \
+            -var="project_name=${{ vars.TF_PROJECT_NAME }}" \
+            -var="role_arn=${{ vars.TF_ROLE_ARN }}" \
+            -out=tfplan
+
+      # Applies only on merge to main. Requires a successful plan in the same run.
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve tfplan

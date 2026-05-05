@@ -12,24 +12,29 @@
 # Intended for use by the infra team only.
 #
 # Usage:
-#   ./new-project.sh <project-name> <github-repo-name>
+#   ./new-project.sh <project-name> <github-repo-name> [aws-profile]
+#
+# Arguments:
+#   project-name      Short unique identifier for the project (e.g. my-api)
+#   github-repo-name  GitHub repository name for the downstream project
+#   aws-profile       AWS CLI profile to use (default: terraform-admin)
 #
 # Requirements:
 #   - Run from the root of this repo (terraform-backend-s3)
 #   - terraform apply must have been run at least once so outputs are available
 #   - AWS SSO session must be active: aws sso login --profile terraform-admin
-#   - github_org must be set in terraform.tfvars
 # ---------------------------------------------------------------------------
 
 set -euo pipefail
 
-if [ $# -ne 2 ]; then
-  echo "Usage: $0 <project-name> <github-repo-name>" >&2
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+  echo "Usage: $0 <project-name> <github-repo-name> [aws-profile]" >&2
   exit 1
 fi
 
 PROJECT_NAME="$1"
 GITHUB_REPO="$2"
+BOOTSTRAP_PROFILE="${3:-terraform-admin}"
 ROLE_NAME="tf-${PROJECT_NAME}"
 POLICY_NAME="tf-${PROJECT_NAME}-state-access"
 
@@ -49,36 +54,18 @@ if ! terraform output > /dev/null 2>&1; then
 fi
 
 # ---------------------------------------------------------------------------
-# Read config from terraform.tfvars
+# Read all config from Terraform outputs
 # ---------------------------------------------------------------------------
-AWS_REGION="us-east-1"
-AWS_ACCOUNT_ID=""
-GITHUB_ORG=""
-BOOTSTRAP_PROFILE="terraform-admin"
-
-if [ -f "terraform.tfvars" ]; then
-  AWS_REGION=$(grep 'aws_region'       terraform.tfvars | awk -F'"' '{print $2}')
-  AWS_ACCOUNT_ID=$(grep 'aws_account_id'  terraform.tfvars | awk -F'"' '{print $2}')
-  GITHUB_ORG=$(grep 'github_org'       terraform.tfvars | awk -F'"' '{print $2}' || true)
-  BOOTSTRAP_PROFILE=$(grep 'bootstrap_profile' terraform.tfvars | awk -F'"' '{print $2}' || echo "terraform-admin")
-fi
-
-if [ -z "${GITHUB_ORG}" ]; then
-  echo "Error: github_org not set in terraform.tfvars" >&2
-  exit 1
-fi
-
-if [ -z "${AWS_ACCOUNT_ID}" ]; then
-  echo "Error: aws_account_id not set in terraform.tfvars" >&2
-  exit 1
-fi
-
+AWS_REGION=$(terraform output -raw aws_region)
+AWS_ACCOUNT_ID=$(terraform output -raw aws_account_id)
+GITHUB_ORG=$(terraform output -raw github_org)
 S3_BUCKET=$(terraform output -raw s3_bucket_name)
 DYNAMODB_TABLE=$(terraform output -raw dynamodb_table_name)
 KMS_KEY_ARN=$(terraform output -raw kms_key_arn)
 OIDC_PROVIDER_ARN=$(terraform output -raw oidc_provider_arn)
 
-if [ -z "${S3_BUCKET}" ] || [ -z "${DYNAMODB_TABLE}" ] || [ -z "${KMS_KEY_ARN}" ] || [ -z "${OIDC_PROVIDER_ARN}" ]; then
+if [ -z "${AWS_REGION}" ] || [ -z "${AWS_ACCOUNT_ID}" ] || [ -z "${GITHUB_ORG}" ] || \
+   [ -z "${S3_BUCKET}" ] || [ -z "${DYNAMODB_TABLE}" ] || [ -z "${KMS_KEY_ARN}" ] || [ -z "${OIDC_PROVIDER_ARN}" ]; then
   echo "Error: one or more required outputs are empty. Re-run terraform apply." >&2
   exit 1
 fi
@@ -110,7 +97,7 @@ if [ "${CONFIRM}" != "y" ] && [ "${CONFIRM}" != "Y" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Create IAM role with trust policy
+# Create IAM role with trust policy (idempotent)
 # ---------------------------------------------------------------------------
 TRUST_POLICY=$(cat <<EOF
 {
@@ -147,16 +134,20 @@ EOF
 )
 
 echo ""
-echo "Creating IAM role ${ROLE_NAME}..."
-aws iam create-role \
-  --profile "${BOOTSTRAP_PROFILE}" \
-  --role-name "${ROLE_NAME}" \
-  --assume-role-policy-document "${TRUST_POLICY}" \
-  --query 'Role.Arn' \
-  --output text > /dev/null
+if aws iam get-role --profile "${BOOTSTRAP_PROFILE}" --role-name "${ROLE_NAME}" > /dev/null 2>&1; then
+  echo "IAM role ${ROLE_NAME} already exists, skipping creation."
+else
+  echo "Creating IAM role ${ROLE_NAME}..."
+  aws iam create-role \
+    --profile "${BOOTSTRAP_PROFILE}" \
+    --role-name "${ROLE_NAME}" \
+    --assume-role-policy-document "${TRUST_POLICY}" \
+    --query 'Role.Arn' \
+    --output text > /dev/null
+fi
 
 # ---------------------------------------------------------------------------
-# Create and attach state access policy
+# Create and attach state access policy (idempotent)
 # ---------------------------------------------------------------------------
 STATE_POLICY=$(cat <<EOF
 {
@@ -196,19 +187,40 @@ STATE_POLICY=$(cat <<EOF
 EOF
 )
 
-echo "Creating IAM policy ${POLICY_NAME}..."
-POLICY_ARN=$(aws iam create-policy \
+EXISTING_POLICY_ARN=$(aws iam list-policies \
   --profile "${BOOTSTRAP_PROFILE}" \
-  --policy-name "${POLICY_NAME}" \
-  --policy-document "${STATE_POLICY}" \
-  --query 'Policy.Arn' \
-  --output text)
+  --scope Local \
+  --query "Policies[?PolicyName=='${POLICY_NAME}'].Arn" \
+  --output text 2>/dev/null || true)
 
-echo "Attaching policy to role..."
-aws iam attach-role-policy \
+if [ -n "${EXISTING_POLICY_ARN}" ]; then
+  echo "IAM policy ${POLICY_NAME} already exists, skipping creation."
+  POLICY_ARN="${EXISTING_POLICY_ARN}"
+else
+  echo "Creating IAM policy ${POLICY_NAME}..."
+  POLICY_ARN=$(aws iam create-policy \
+    --profile "${BOOTSTRAP_PROFILE}" \
+    --policy-name "${POLICY_NAME}" \
+    --policy-document "${STATE_POLICY}" \
+    --query 'Policy.Arn' \
+    --output text)
+fi
+
+ALREADY_ATTACHED=$(aws iam list-attached-role-policies \
   --profile "${BOOTSTRAP_PROFILE}" \
   --role-name "${ROLE_NAME}" \
-  --policy-arn "${POLICY_ARN}"
+  --query "AttachedPolicies[?PolicyArn=='${POLICY_ARN}'].PolicyArn" \
+  --output text 2>/dev/null || true)
+
+if [ -n "${ALREADY_ATTACHED}" ]; then
+  echo "Policy already attached to role, skipping."
+else
+  echo "Attaching policy to role..."
+  aws iam attach-role-policy \
+    --profile "${BOOTSTRAP_PROFILE}" \
+    --role-name "${ROLE_NAME}" \
+    --policy-arn "${POLICY_ARN}"
+fi
 
 # ---------------------------------------------------------------------------
 # Output

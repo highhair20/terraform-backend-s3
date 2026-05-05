@@ -27,8 +27,12 @@ the sample project. You need to do this once per project.
 ./new-project.sh sample-project-b <your-github-repo>
 ```
 
-The script will print a `backend.hcl` block and the role ARN. Add the role ARN to the
-project's `terraform.tfvars`:
+The script will print a `backend.hcl` block and the role ARN.
+
+Copy the printed `backend.hcl` content into the project's `backend.conf` file (it is safe
+to commit — it contains no credentials).
+
+Add the role ARN and other values to the project's `terraform.tfvars` (do not commit this file):
 
 ```hcl
 # sample_project/sample-project-a/terraform.tfvars (gitignored)
@@ -40,7 +44,7 @@ role_arn       = "<ROLE_ARN_FROM_SCRIPT>"
 
 ---
 
-## sample-project-a
+## Local development
 
 ```bash
 cd sample_project/sample-project-a
@@ -49,11 +53,37 @@ terraform plan
 terraform apply
 ```
 
-## sample-project-b
-
 ```bash
 cd sample_project/sample-project-b
 terraform init -backend-config=backend.conf
 terraform plan
 terraform apply
 ```
+
+---
+
+## GitHub Actions (CI/CD)
+
+An example workflow is provided at `.github/workflows/terraform.yml`. It:
+- Runs `terraform plan` on every push and pull request
+- Runs `terraform apply` automatically on merge to `main`
+- Authenticates via GitHub OIDC — no long-lived AWS credentials required
+
+### Setup
+
+1. Copy `.github/workflows/terraform.yml` into your downstream project repository.
+
+2. Set the following **Actions variables** in your GitHub repository
+   (Settings → Secrets and variables → Actions → Variables):
+
+   | Variable | Value |
+   |---|---|
+   | `TF_ROLE_ARN` | Role ARN printed by `new-project.sh` |
+   | `AWS_ACCOUNT_ID` | Your AWS account ID |
+   | `AWS_REGION` | e.g. `us-east-1` |
+   | `TF_PROJECT_NAME` | e.g. `sample-project-a` |
+
+3. Adjust the `working-directory` in the workflow file to match the path of your
+   Terraform root within the repository.
+
+4. Commit and push. The workflow will authenticate using the OIDC role on its first run.
