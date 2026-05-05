@@ -17,8 +17,8 @@ lock expires automatically, preventing it from being held indefinitely.
 ## Before You Begin
 
 This project uses **AWS IAM Identity Center** (formerly AWS SSO) for authentication. Identity Center
-issues short-lived temporary credentials on login — no long-lived access keys are stored on disk.
-No long-lived IAM credentials are needed — the shared backend infrastructure is created by Terraform itself.
+issues short-lived temporary credentials on login — no long-lived access keys are needed. Terraform
+uses those credentials to create the backend infrastructure.
 
 ### 1. Enable IAM Identity Center
 1. In the AWS console search for **IAM Identity Center** and open it
@@ -29,7 +29,7 @@ No long-lived IAM credentials are needed — the shared backend infrastructure i
 
 ### 2. Create a Permission Set
 A Permission Set defines what actions are allowed when you log in with this profile. This one grants
-the permissions Terraform needs to create all resources in this project: IAM user, role, and
+the permissions Terraform needs to create all resources in this project: IAM roles and
 policies; S3 bucket and its configuration; DynamoDB table; and KMS key.
 
 1. IAM Identity Center → **Permission sets** → **Create permission set**

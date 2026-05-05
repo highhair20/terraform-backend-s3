@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
 # new-project.sh
-# Bootstraps IAM resources and generates backend.hcl for a new downstream project.
+# Bootstraps IAM resources and generates backend.conf for a new downstream project.
 #
 # Creates the following AWS resources:
 #   - IAM role tf-<project-name> with two trust relationships:
@@ -235,7 +235,10 @@ dynamodb_table = "${DYNAMODB_TABLE}"
 kms_key_id     = "${KMS_KEY_ARN}"
 region         = "${AWS_REGION}"
 encrypt        = true
+key            = "${PROJECT_NAME}/dev/terraform.tfstate"
 EOF
+echo ""
+echo "  (change 'dev' in the key to match your target environment)"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

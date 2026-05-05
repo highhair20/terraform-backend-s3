@@ -27,10 +27,10 @@ the sample project. You need to do this once per project.
 ./new-project.sh sample-project-b <your-github-repo>
 ```
 
-The script will print a `backend.hcl` block and the role ARN.
+The script will print a `backend.conf` block and the role ARN.
 
-Copy the printed `backend.hcl` content into the project's `backend.conf` file (it is safe
-to commit — it contains no credentials).
+Copy the printed `backend.conf` content into the project's `backend.conf` file (it is safe
+to commit — it contains no credentials). Add the `key` field to match your project and environment.
 
 Add the role ARN and other values to the project's `terraform.tfvars` (do not commit this file):
 
