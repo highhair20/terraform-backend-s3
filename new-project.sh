@@ -202,7 +202,7 @@ EXISTING_POLICY_ARN=$(aws iam list-policies \
   --profile "${BOOTSTRAP_PROFILE}" \
   --scope Local \
   --query "Policies[?PolicyName=='${POLICY_NAME}'].Arn" \
-  --output text 2>/dev/null || true)
+  --output text)
 
 if [ -n "${EXISTING_POLICY_ARN}" ]; then
   echo "IAM policy ${POLICY_NAME} already exists, skipping creation."
