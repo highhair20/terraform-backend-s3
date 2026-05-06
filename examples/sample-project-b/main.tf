@@ -2,8 +2,8 @@ terraform {
   backend "s3" {}
 }
 
-module "sample_project_module_resources" {
-  source = "../modules/"
+module "web_infra" {
+  source = "../modules/web-infra/"
 
   aws_account_id = var.aws_account_id
   project_name   = var.project_name

@@ -1,3 +1,5 @@
+# Template workflow — copy this file to .github/workflows/terraform.yml in your
+# downstream project repository. It is not executed from this location.
 name: Terraform
 
 on:

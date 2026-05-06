@@ -103,7 +103,7 @@ This section is optional and is only to see how objects and state manifest thems
 for actual projects. 
 
 For a detailed walk-through of setting up the sample projects go 
-[here](sample_project/README.md).
+[here](examples/README.md).
 
 Once you are done your s3 bucket should look something like:
 

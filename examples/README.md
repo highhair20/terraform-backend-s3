@@ -36,7 +36,7 @@ deploying to a different environment.
 Add the role ARN and other values to the project's `terraform.tfvars` (do not commit this file):
 
 ```hcl
-# sample_project/sample-project-a/terraform.tfvars (gitignored)
+# examples/sample-project-a/terraform.tfvars (gitignored)
 aws_account_id = "<YOUR_ACCOUNT_ID>"
 aws_region     = "us-east-1"
 project_name   = "sample-project-a"
@@ -48,14 +48,14 @@ role_arn       = "<ROLE_ARN_FROM_SCRIPT>"
 ## Local development
 
 ```bash
-cd sample_project/sample-project-a
+cd examples/sample-project-a
 terraform init -backend-config=backend.conf
 terraform plan
 terraform apply
 ```
 
 ```bash
-cd sample_project/sample-project-b
+cd examples/sample-project-b
 terraform init -backend-config=backend.conf
 terraform plan
 terraform apply
@@ -72,7 +72,7 @@ An example workflow is provided at `.github/workflows/terraform.yml`. It:
 
 ### Setup
 
-1. Copy `.github/workflows/terraform.yml` into your downstream project repository.
+1. Copy `examples/.github/workflows/terraform.yml` into your downstream project repository as `.github/workflows/terraform.yml`.
 
 2. Set the following **Actions variables** in your GitHub repository
    (Settings → Secrets and variables → Actions → Variables):
