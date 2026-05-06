@@ -154,7 +154,12 @@ This file is **safe to commit** — it contains no credentials.
 
 ### 4. Configure your provider and variables
 
-Add the provider block so Terraform assumes the project role when provisioning resources:
+These are files you create in your own project repository. You can use the files in
+[`examples/sample-project-a/`](examples/sample-project-a/) as a working reference.
+
+**`main.tf`** — add the `assume_role` block to your AWS provider so Terraform assumes
+the project role when provisioning resources. If you already have a provider block,
+just add `assume_role` to it:
 
 ```hcl
 provider "aws" {
@@ -166,13 +171,29 @@ provider "aws" {
 }
 ```
 
-Declare the corresponding input variables (typically in `variables.tf`):
+**`variables.tf`** — declare the four input variables the provider and backend depend on.
+Create this file if it doesn't exist yet:
 
 ```hcl
-variable "aws_account_id" { type = string }
-variable "aws_region"     { type = string }
-variable "project_name"   { type = string }
-variable "role_arn"       { type = string }
+variable "aws_account_id" {
+  type        = string
+  description = "AWS account ID where project resources are deployed"
+}
+
+variable "aws_region" {
+  type        = string
+  description = "AWS region where project resources are deployed"
+}
+
+variable "project_name" {
+  type        = string
+  description = "Short unique identifier for the project"
+}
+
+variable "role_arn" {
+  type        = string
+  description = "ARN of the IAM role to assume when provisioning project resources"
+}
 ```
 
 ### 5. Create terraform.tfvars
