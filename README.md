@@ -121,20 +121,33 @@ The script creates an IAM role and state-access policy for the project, then pri
 - **`backend.conf` block** — the S3 backend configuration (safe to commit, no credentials)
 - **Role ARN** — the IAM role your project will assume when provisioning resources
 
-### 2. Add the backend block
+### 2. Configure main.tf
 
-In your downstream project, add an empty `backend "s3"` block to your Terraform root. The block must be empty — all values come from `backend.conf` at init time.
+At the top of your `main.tf`, add the `terraform` backend block and the AWS provider.
+The `backend "s3"` block must be empty — all values come from `backend.conf` at init time.
+The `assume_role` block tells Terraform to use the project IAM role when provisioning resources.
 
 ```hcl
 # main.tf
 terraform {
   backend "s3" {}
 }
+
+provider "aws" {
+  region = var.aws_region
+
+  assume_role {
+    role_arn = var.role_arn
+  }
+}
 ```
+
+If you already have a `provider "aws"` block, just add the `assume_role` section to it.
 
 ### 3. Create backend.conf
 
-Create `backend.conf` in the same directory as your `main.tf` and paste the block printed by `new-project.sh`. The exact path depends on where your Terraform root lives:
+Create `backend.conf` in the same directory as your `main.tf` and paste the block printed
+by `new-project.sh`. The exact path depends on where your Terraform root lives:
 
 ```
 your-repo/backend.conf          # Terraform at the repo root
@@ -152,24 +165,13 @@ key            = "my-api/dev/terraform.tfstate"
 
 This file is **safe to commit** — it contains no credentials.
 
-### 4. Configure your provider and variables
+### 4. Create variables.tf
 
 These are files you create in your own project repository. You can use the files in
 [`examples/sample-project-a/`](examples/sample-project-a/) as a working reference.
 
-**`main.tf`** — add the `assume_role` block to your AWS provider so Terraform assumes
-the project role when provisioning resources. If you already have a provider block,
-just add `assume_role` to it:
-
-```hcl
-provider "aws" {
-  region = var.aws_region
-
-  assume_role {
-    role_arn = var.role_arn
-  }
-}
-```
+Create `variables.tf` in the same directory to declare the four variables the provider
+and backend depend on:
 
 **`variables.tf`** — declare the four input variables the provider and backend depend on.
 Create this file if it doesn't exist yet:
