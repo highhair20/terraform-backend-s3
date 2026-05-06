@@ -16,7 +16,7 @@
 #
 # Arguments:
 #   project-name      Short unique identifier for the project (e.g. my-api)
-#   github-repo-name  GitHub repository name for the downstream project
+#   github-repo-name  GitHub repo name or full URL (e.g. my-repo or https://github.com/org/my-repo)
 #   aws-profile       AWS CLI profile to use (default: terraform-admin)
 #
 # Requirements:
@@ -35,6 +35,14 @@ fi
 PROJECT_NAME="$1"
 GITHUB_REPO="$2"
 BOOTSTRAP_PROFILE="${3:-terraform-admin}"
+
+# Accept full GitHub URLs (HTTPS or SSH) — extract the repo name from them
+if [[ "$GITHUB_REPO" =~ ^https?://github\.com/[^/]+/([^/]+)$ ]]; then
+  GITHUB_REPO="${BASH_REMATCH[1]}"
+elif [[ "$GITHUB_REPO" =~ ^git@github\.com:[^/]+/([^/]+)$ ]]; then
+  GITHUB_REPO="${BASH_REMATCH[1]}"
+fi
+GITHUB_REPO="${GITHUB_REPO%.git}"  # strip trailing .git if present
 
 if [[ ! "$PROJECT_NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
   echo "Error: project-name must contain only letters, numbers, hyphens, and underscores" >&2
