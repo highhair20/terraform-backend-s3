@@ -134,7 +134,12 @@ terraform {
 
 ### 3. Create backend.conf
 
-In the same directory as your `main.tf`, create `backend.conf` and paste the block printed by `new-project.sh`:
+Create `backend.conf` in the same directory as your `main.tf` and paste the block printed by `new-project.sh`. The exact path depends on where your Terraform root lives:
+
+```
+your-repo/backend.conf          # Terraform at the repo root
+your-repo/infra/backend.conf    # Terraform in a subdirectory
+```
 
 ```hcl
 bucket         = "<YOUR-ORG>-tf-state"

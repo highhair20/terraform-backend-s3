@@ -268,8 +268,11 @@ echo "${ROLE_ARN}"
 echo "" >&2
 echo "Done. Next steps:" >&2
 echo "" >&2
-echo "  1. Copy the backend.conf block above into your project's backend.conf" >&2
-echo "     and commit it — it contains no credentials." >&2
+echo "  1. In your project repo, create backend.conf in the same directory as" >&2
+echo "     your main.tf and paste the block above into it. Commit the file —" >&2
+echo "     it contains no credentials. Example path:" >&2
+echo "       your-repo/backend.conf          (Terraform at repo root)" >&2
+echo "       your-repo/infra/backend.conf    (Terraform in a subdirectory)" >&2
 echo "  2. Add the role ARN to the GitHub Actions workflow (see README)" >&2
 echo "  3. For local dev, add to your project's terraform.tfvars (gitignored):" >&2
 echo "       role_arn = \"${ROLE_ARN}\"" >&2
