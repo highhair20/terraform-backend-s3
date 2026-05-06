@@ -100,23 +100,132 @@ You should now have a fully configured remote backend ready for use by any numbe
 
 ## Using This Backend in Your Own Project
 
-See **[docs/downstream-project.md](docs/downstream-project.md)** for the complete step-by-step guide to connecting any standalone Terraform project — in its own separate repository — to this backend.
+Follow these steps once per downstream project. Your project lives in its own separate repository — it does not need to be inside this repo.
 
-In brief:
-1. Run `./new-project.sh <project-name> <github-repo>` from this repo to create the IAM role
-2. Add `backend "s3" {}` to your project's `main.tf`
-3. Paste the printed `backend.conf` block into a `backend.conf` file in your project
-4. Add the role ARN to your `terraform.tfvars`
-5. Run `terraform init -backend-config=backend.conf`
+### 1. Register the project
+
+From the root of this (`terraform-backend-s3`) repository, run:
+
+```bash
+./new-project.sh <project-name> <github-repo-name>
+```
+
+Example:
+
+```bash
+./new-project.sh my-api my-api-repo
+```
+
+The script creates an IAM role and state-access policy for the project, then prints two things you need in the steps below:
+
+- **`backend.conf` block** — the S3 backend configuration (safe to commit, no credentials)
+- **Role ARN** — the IAM role your project will assume when provisioning resources
+
+### 2. Add the backend block
+
+In your downstream project, add an empty `backend "s3"` block to your Terraform root. The block must be empty — all values come from `backend.conf` at init time.
+
+```hcl
+# main.tf
+terraform {
+  backend "s3" {}
+}
+```
+
+### 3. Create backend.conf
+
+In the same directory as your `main.tf`, create `backend.conf` and paste the block printed by `new-project.sh`:
+
+```hcl
+bucket         = "<YOUR-ORG>-tf-state"
+dynamodb_table = "terraform-state"
+kms_key_id     = "<KMS-KEY-ARN>"
+region         = "us-east-1"
+encrypt        = true
+key            = "my-api/dev/terraform.tfstate"
+```
+
+This file is **safe to commit** — it contains no credentials.
+
+### 4. Configure your provider and variables
+
+Add the provider block so Terraform assumes the project role when provisioning resources:
+
+```hcl
+provider "aws" {
+  region = var.aws_region
+
+  assume_role {
+    role_arn = var.role_arn
+  }
+}
+```
+
+Declare the corresponding input variables (typically in `variables.tf`):
+
+```hcl
+variable "aws_account_id" { type = string }
+variable "aws_region"     { type = string }
+variable "project_name"   { type = string }
+variable "role_arn"       { type = string }
+```
+
+### 5. Create terraform.tfvars
+
+Create `terraform.tfvars` in the same directory. **Do not commit this file** — add it to your `.gitignore`.
+
+```hcl
+aws_account_id = "<YOUR AWS ACCOUNT ID>"
+aws_region     = "us-east-1"
+project_name   = "my-api"
+role_arn       = "<ROLE_ARN_FROM_NEW_PROJECT_SH>"
+```
+
+### 6. Initialise and run
+
+```bash
+aws sso login --profile terraform-admin
+terraform init -backend-config=backend.conf
+terraform plan
+terraform apply
+```
+
+> SSO sessions expire after 8–12 hours. If you see authentication errors, re-run
+> `aws sso login --profile terraform-admin` to refresh your credentials.
+
+### 7. Set up GitHub Actions (optional)
+
+Copy the template workflow into your project repository:
+
+```bash
+cp <path-to-terraform-backend-s3>/examples/.github/workflows/terraform.yml \
+   .github/workflows/terraform.yml
+```
+
+In your GitHub repository go to **Settings → Secrets and variables → Actions → Variables** and add:
+
+| Variable | Value |
+|---|---|
+| `TF_ROLE_ARN` | Role ARN printed by `new-project.sh` |
+| `AWS_ACCOUNT_ID` | Your AWS account ID |
+| `AWS_REGION` | e.g. `us-east-1` |
+| `TF_PROJECT_NAME` | Your project name (e.g. `my-api`) |
+
+If your Terraform root is in a subdirectory (e.g. `infra/`), uncomment and set `working-directory` in the workflow file.
+
+Commit and push. The workflow runs `terraform plan` on every PR and `terraform apply` on merge to `main`.
+
+> **Recommended:** Enable branch protection on `main` so that `terraform apply` only runs
+> after a plan has been reviewed and approved via PR.
+
+---
 
 ## See it in action
-This section is optional and is only to see how objects and state manifest themselves in s3 and DynamoDB
-for actual projects. 
 
-For a detailed walk-through of setting up the sample projects go 
-[here](examples/README.md).
+The `examples/` directory contains two working sample projects that demonstrate the full setup
+described above. See [examples/README.md](examples/README.md) for a walkthrough.
 
-Once you are done your s3 bucket should look something like:
+Once you are done your S3 bucket should look something like:
 
 ![S3 bucket containing two sample projects](docs/images/s3.png)
 
