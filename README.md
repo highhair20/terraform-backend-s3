@@ -98,6 +98,17 @@ terraform apply
 That's it. Terraform will create the S3 bucket, DynamoDB table, KMS key, and GitHub OIDC provider.
 You should now have a fully configured remote backend ready for use by any number of projects.
 
+## Using This Backend in Your Own Project
+
+See **[docs/downstream-project.md](docs/downstream-project.md)** for the complete step-by-step guide to connecting any standalone Terraform project — in its own separate repository — to this backend.
+
+In brief:
+1. Run `./new-project.sh <project-name> <github-repo>` from this repo to create the IAM role
+2. Add `backend "s3" {}` to your project's `main.tf`
+3. Paste the printed `backend.conf` block into a `backend.conf` file in your project
+4. Add the role ARN to your `terraform.tfvars`
+5. Run `terraform init -backend-config=backend.conf`
+
 ## See it in action
 This section is optional and is only to see how objects and state manifest themselves in s3 and DynamoDB
 for actual projects. 
