@@ -35,7 +35,6 @@ When it finishes it prints two things you will need in the following steps.
 bucket       = "<YOUR-ORG>-tf-state"
 use_lockfile = true
 kms_key_id   = "<KMS-KEY-ARN>"
-role_arn     = "<ROLE-ARN>"
 region       = "us-east-1"
 encrypt      = true
 key            = "my-api/dev/terraform.tfstate"
@@ -76,7 +75,6 @@ backend-prod.conf
 bucket       = "<YOUR-ORG>-tf-state"
 use_lockfile = true
 kms_key_id   = "<KMS-KEY-ARN>"
-role_arn     = "<ROLE-ARN>"
 region       = "us-east-1"
 encrypt      = true
 key          = "my-api/dev/terraform.tfstate"   # change env per file

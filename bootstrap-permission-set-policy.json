@@ -87,6 +87,15 @@
             "Resource": "*"
         },
         {
+            "Sid": "KMSUse",
+            "Effect": "Allow",
+            "Action": [
+                "kms:Decrypt",
+                "kms:GenerateDataKey"
+            ],
+            "Resource": "*"
+        },
+        {
             "Sid": "KMSManage",
             "Effect": "Allow",
             "Action": [
