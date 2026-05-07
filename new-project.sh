@@ -255,11 +255,17 @@ echo "${ROLE_ARN}"
 echo "" >&2
 echo "Done. Next steps:" >&2
 echo "" >&2
-echo "  1. In your project repo, create backend.conf in the same directory as" >&2
-echo "     your main.tf and paste the block above into it. Commit the file —" >&2
-echo "     it contains no credentials. Example path:" >&2
-echo "       your-repo/backend.conf          (Terraform at repo root)" >&2
-echo "       your-repo/infra/backend.conf    (Terraform in a subdirectory)" >&2
+echo "  1. In your project repo, create one backend conf file per environment" >&2
+echo "     in the same directory as your main.tf and paste the block above into" >&2
+echo "     each, changing only the key. Commit the files — no credentials." >&2
+echo "     Example paths (Terraform at repo root):" >&2
+echo "       your-repo/backend-dev.conf" >&2
+echo "       your-repo/backend-staging.conf" >&2
+echo "       your-repo/backend-prod.conf" >&2
+echo "     Or if Terraform is in a subdirectory:" >&2
+echo "       your-repo/infra/backend-dev.conf" >&2
+echo "       your-repo/infra/backend-staging.conf" >&2
+echo "       your-repo/infra/backend-prod.conf" >&2
 echo "  2. Add the role ARN to the GitHub Actions workflow (see README)" >&2
 echo "  3. For local dev, add to your project's terraform.tfvars (gitignored):" >&2
 echo "       role_arn = \"${ROLE_ARN}\"" >&2

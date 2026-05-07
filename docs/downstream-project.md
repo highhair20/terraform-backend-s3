@@ -60,9 +60,16 @@ terraform {
 
 ---
 
-## Step 3 — Create backend.conf
+## Step 3 — Create backend conf files
 
-In the same directory as your `main.tf`, create `backend.conf` and paste the block printed by `new-project.sh`:
+In the same directory as your `main.tf`, create one file per environment using the block
+printed by `new-project.sh`. Change only the `key` between files:
+
+```
+backend-dev.conf
+backend-staging.conf
+backend-prod.conf
+```
 
 ```hcl
 bucket       = "<YOUR-ORG>-tf-state"
@@ -70,13 +77,10 @@ use_lockfile = true
 kms_key_id   = "<KMS-KEY-ARN>"
 region       = "us-east-1"
 encrypt      = true
-key            = "my-api/dev/terraform.tfstate"
+key          = "my-api/dev/terraform.tfstate"   # change env per file
 ```
 
-This file is **safe to commit** — it contains no credentials, only resource identifiers.
-
-> To deploy to a different environment, change `dev` in the `key` to `staging`, `prod`, etc.
-> See [Multiple environments](#multiple-environments) below.
+These files are **safe to commit** — they contain no credentials, only resource identifiers.
 
 ---
 

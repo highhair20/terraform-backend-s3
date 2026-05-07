@@ -142,14 +142,19 @@ provider "aws" {
 
 If you already have a `provider "aws"` block, just add the `assume_role` section to it.
 
-### 3. Create backend.conf
+### 3. Create backend conf files
 
-Create `backend.conf` in the same directory as your `main.tf` and paste the block printed
-by `new-project.sh`. The exact path depends on where your Terraform root lives:
+Create one file per environment in the same directory as your `main.tf`, using the block
+printed by `new-project.sh`. Change only the `key` between files:
 
 ```
-your-repo/backend.conf          # Terraform at the repo root
-your-repo/infra/backend.conf    # Terraform in a subdirectory
+your-repo/backend-dev.conf        # Terraform at the repo root
+your-repo/backend-staging.conf
+your-repo/backend-prod.conf
+
+your-repo/infra/backend-dev.conf  # Terraform in a subdirectory
+your-repo/infra/backend-staging.conf
+your-repo/infra/backend-prod.conf
 ```
 
 ```hcl
@@ -158,10 +163,10 @@ use_lockfile = true
 kms_key_id   = "<KMS-KEY-ARN>"
 region       = "us-east-1"
 encrypt      = true
-key          = "my-api/dev/terraform.tfstate"
+key          = "my-api/dev/terraform.tfstate"   # change env per file
 ```
 
-This file is **safe to commit** — it contains no credentials.
+These files are **safe to commit** — they contain no credentials.
 
 ### 4. Create variables.tf
 
