@@ -142,13 +142,14 @@ terraform.tfvars
 
 ```bash
 aws sso login --profile terraform-admin
+export AWS_PROFILE=terraform-admin
 terraform init -backend-config=backend.conf
 terraform plan
 terraform apply
 ```
 
 > SSO sessions expire after 8–12 hours. If you see authentication errors on a later run,
-> re-run `aws sso login --profile terraform-admin` to refresh your credentials.
+> re-run `aws sso login --profile terraform-admin && export AWS_PROFILE=terraform-admin` to refresh your credentials.
 
 ---
 

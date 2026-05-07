@@ -81,9 +81,10 @@ github_org        = "<YOUR-GITHUB-ORG>"
 2. Log in with your bootstrap profile
 ```bash
 aws sso login --profile terraform-admin
+export AWS_PROFILE=terraform-admin
 ```
 > SSO sessions expire after 8–12 hours. If you get authentication errors on a later run,
-> re-run the command above to refresh your credentials.
+> re-run both commands above to refresh your credentials.
 
 3. Execute Terraform commands
 ```bash
@@ -210,13 +211,14 @@ role_arn       = "<ROLE_ARN_FROM_NEW_PROJECT_SH>"
 
 ```bash
 aws sso login --profile terraform-admin
+export AWS_PROFILE=terraform-admin
 terraform init -backend-config=backend.conf
 terraform plan
 terraform apply
 ```
 
 > SSO sessions expire after 8–12 hours. If you see authentication errors, re-run
-> `aws sso login --profile terraform-admin` to refresh your credentials.
+> `aws sso login --profile terraform-admin && export AWS_PROFILE=terraform-admin` to refresh your credentials.
 
 ### 7. Set up GitHub Actions (optional)
 
