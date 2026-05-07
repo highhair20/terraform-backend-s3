@@ -161,6 +161,7 @@ your-repo/infra/backend-prod.conf
 bucket       = "<YOUR-ORG>-tf-state"
 use_lockfile = true
 kms_key_id   = "<KMS-KEY-ARN>"
+role_arn     = "<ROLE-ARN>"
 region       = "us-east-1"
 encrypt      = true
 key          = "my-api/dev/terraform.tfstate"   # change env per file
@@ -291,6 +292,7 @@ Each file is identical except for the `key`:
 bucket       = "<YOUR-ORG>-tf-state"
 use_lockfile = true
 kms_key_id   = "<KMS-KEY-ARN>"
+role_arn     = "<ROLE-ARN>"
 region       = "us-east-1"
 encrypt      = true
 key          = "<project-name>/prod/terraform.tfstate"

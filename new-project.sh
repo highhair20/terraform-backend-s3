@@ -241,6 +241,7 @@ use_lockfile = true
 kms_key_id   = "${KMS_KEY_ARN}"
 region       = "${AWS_REGION}"
 encrypt      = true
+role_arn     = "${ROLE_ARN}"
 key          = "${PROJECT_NAME}/dev/terraform.tfstate"
 EOF
 echo ""
