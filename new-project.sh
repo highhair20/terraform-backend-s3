@@ -79,12 +79,11 @@ AWS_REGION=$(terraform output -raw aws_region)
 AWS_ACCOUNT_ID=$(terraform output -raw aws_account_id)
 GITHUB_ORG=$(terraform output -raw github_org)
 S3_BUCKET=$(terraform output -raw s3_bucket_name)
-DYNAMODB_TABLE=$(terraform output -raw dynamodb_table_name)
 KMS_KEY_ARN=$(terraform output -raw kms_key_arn)
 OIDC_PROVIDER_ARN=$(terraform output -raw oidc_provider_arn)
 
 if [ -z "${AWS_REGION}" ] || [ -z "${AWS_ACCOUNT_ID}" ] || [ -z "${GITHUB_ORG}" ] || \
-   [ -z "${S3_BUCKET}" ] || [ -z "${DYNAMODB_TABLE}" ] || [ -z "${KMS_KEY_ARN}" ] || [ -z "${OIDC_PROVIDER_ARN}" ]; then
+   [ -z "${S3_BUCKET}" ] || [ -z "${KMS_KEY_ARN}" ] || [ -z "${OIDC_PROVIDER_ARN}" ]; then
   echo "Error: one or more required outputs are empty. Re-run terraform apply." >&2
   exit 1
 fi
@@ -105,9 +104,8 @@ echo "    GitHub Actions: repo:${GITHUB_ORG}/${GITHUB_REPO}:* (any branch)"
 echo "    SSO developers: any IAM Identity Center user in account ${AWS_ACCOUNT_ID}"
 echo ""
 echo "  State access:"
-echo "    S3 bucket:      ${S3_BUCKET}"
-echo "    DynamoDB table: ${DYNAMODB_TABLE}"
-echo "    KMS key:        ${KMS_KEY_ARN}"
+echo "    S3 bucket: ${S3_BUCKET}"
+echo "    KMS key:   ${KMS_KEY_ARN}"
 echo ""
 read -rp "Proceed? [y/N] " CONFIRM
 if [ "${CONFIRM}" != "y" ] && [ "${CONFIRM}" != "Y" ]; then
@@ -185,17 +183,6 @@ STATE_POLICY=$(cat <<EOF
       "Resource": "arn:aws:s3:::${S3_BUCKET}/*"
     },
     {
-      "Sid": "DynamoDBLocking",
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:DescribeTable",
-        "dynamodb:GetItem",
-        "dynamodb:PutItem",
-        "dynamodb:DeleteItem"
-      ],
-      "Resource": "arn:aws:dynamodb:*:${AWS_ACCOUNT_ID}:table/${DYNAMODB_TABLE}"
-    },
-    {
       "Sid": "KMSDecrypt",
       "Effect": "Allow",
       "Action": ["kms:Decrypt", "kms:GenerateDataKey"],
@@ -249,12 +236,12 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "backend.conf — safe to commit, contains no credentials"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 cat <<EOF
-bucket         = "${S3_BUCKET}"
-dynamodb_table = "${DYNAMODB_TABLE}"
-kms_key_id     = "${KMS_KEY_ARN}"
-region         = "${AWS_REGION}"
-encrypt        = true
-key            = "${PROJECT_NAME}/dev/terraform.tfstate"
+bucket       = "${S3_BUCKET}"
+use_lockfile = true
+kms_key_id   = "${KMS_KEY_ARN}"
+region       = "${AWS_REGION}"
+encrypt      = true
+key          = "${PROJECT_NAME}/dev/terraform.tfstate"
 EOF
 echo ""
 echo "  (change 'dev' in the key to match your target environment)"

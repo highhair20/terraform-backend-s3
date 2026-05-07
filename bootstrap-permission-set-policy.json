@@ -46,23 +46,6 @@
             "Resource": "*"
         },
         {
-            "Sid": "DynamoDB",
-            "Effect": "Allow",
-            "Action": [
-                "dynamodb:CreateTable",
-                "dynamodb:DeleteTable",
-                "dynamodb:DescribeContinuousBackups",
-                "dynamodb:DescribeTable",
-                "dynamodb:DescribeTimeToLive",
-                "dynamodb:ListTagsOfResource",
-                "dynamodb:TagResource",
-                "dynamodb:UntagResource",
-                "dynamodb:UpdateContinuousBackups",
-                "dynamodb:UpdateTable"
-            ],
-            "Resource": "arn:aws:dynamodb:*:*:table/terraform-state"
-        },
-        {
             "Sid": "S3",
             "Effect": "Allow",
             "Action": [

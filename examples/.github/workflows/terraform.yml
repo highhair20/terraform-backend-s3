@@ -57,7 +57,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # backend.conf contains bucket, region, key, dynamodb_table, and kms_key_id.
+      # backend.conf contains bucket, region, key, use_lockfile, and kms_key_id.
       # It is safe to commit — it contains no secrets.
       # Generate it by running new-project.sh and saving the printed output.
       - name: Terraform Init

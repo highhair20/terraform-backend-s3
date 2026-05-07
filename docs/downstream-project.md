@@ -32,11 +32,11 @@ When it finishes it prints two things you will need in the following steps.
 
 **backend.conf block** — the backend configuration for this project:
 ```hcl
-bucket         = "<YOUR-ORG>-tf-state"
-dynamodb_table = "terraform-state"
-kms_key_id     = "<KMS-KEY-ARN>"
-region         = "us-east-1"
-encrypt        = true
+bucket       = "<YOUR-ORG>-tf-state"
+use_lockfile = true
+kms_key_id   = "<KMS-KEY-ARN>"
+region       = "us-east-1"
+encrypt      = true
 key            = "my-api/dev/terraform.tfstate"
 ```
 
@@ -65,11 +65,11 @@ terraform {
 In the same directory as your `main.tf`, create `backend.conf` and paste the block printed by `new-project.sh`:
 
 ```hcl
-bucket         = "<YOUR-ORG>-tf-state"
-dynamodb_table = "terraform-state"
-kms_key_id     = "<KMS-KEY-ARN>"
-region         = "us-east-1"
-encrypt        = true
+bucket       = "<YOUR-ORG>-tf-state"
+use_lockfile = true
+kms_key_id   = "<KMS-KEY-ARN>"
+region       = "us-east-1"
+encrypt      = true
 key            = "my-api/dev/terraform.tfstate"
 ```
 

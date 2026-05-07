@@ -8,11 +8,8 @@ an unlimited number of projects.
 
 **S3** stores the Terraform state file centrally, providing a single source of truth across runs and
 contributors. Versioning is enabled so every state change is preserved and can be rolled back.
-State is encrypted at rest using a dedicated KMS key.
-
-**DynamoDB** provides state locking. When a Terraform operation is in progress, a lock record is
-written to DynamoDB so no two processes can modify state simultaneously. If a process crashes the
-lock expires automatically, preventing it from being held indefinitely.
+State is encrypted at rest using a dedicated KMS key. State locking uses S3's native lock file
+support (`use_lockfile = true`), eliminating the need for a separate DynamoDB table.
 
 ## Before You Begin
 
@@ -95,7 +92,7 @@ terraform init
 terraform plan
 terraform apply
 ```
-That's it. Terraform will create the S3 bucket, DynamoDB table, KMS key, and GitHub OIDC provider.
+That's it. Terraform will create the S3 bucket, KMS key, and GitHub OIDC provider.
 You should now have a fully configured remote backend ready for use by any number of projects.
 
 ## Using This Backend in Your Own Project
@@ -155,12 +152,12 @@ your-repo/infra/backend.conf    # Terraform in a subdirectory
 ```
 
 ```hcl
-bucket         = "<YOUR-ORG>-tf-state"
-dynamodb_table = "terraform-state"
-kms_key_id     = "<KMS-KEY-ARN>"
-region         = "us-east-1"
-encrypt        = true
-key            = "my-api/dev/terraform.tfstate"
+bucket       = "<YOUR-ORG>-tf-state"
+use_lockfile = true
+kms_key_id   = "<KMS-KEY-ARN>"
+region       = "us-east-1"
+encrypt      = true
+key          = "my-api/dev/terraform.tfstate"
 ```
 
 This file is **safe to commit** — it contains no credentials.
@@ -284,12 +281,12 @@ Each file is identical except for the `key`:
 
 ```hcl
 # backend-prod.conf
-bucket         = "<YOUR-ORG>-tf-state"
-dynamodb_table = "terraform-state"
-kms_key_id     = "<KMS-KEY-ARN>"
-region         = "us-east-1"
-encrypt        = true
-key            = "<project-name>/prod/terraform.tfstate"
+bucket       = "<YOUR-ORG>-tf-state"
+use_lockfile = true
+kms_key_id   = "<KMS-KEY-ARN>"
+region       = "us-east-1"
+encrypt      = true
+key          = "<project-name>/prod/terraform.tfstate"
 ```
 
 Initialise Terraform with the appropriate file for each environment:
@@ -328,4 +325,4 @@ To get past this you have to delete the versions manually. To do so:
 Follow the previous steps to delete all other objects from the bucket.
 
 Once the bucket is empty, run `terraform destroy` to remove all remaining resources
-(DynamoDB table, KMS key, OIDC provider, and the now-empty S3 bucket).
+(KMS key, OIDC provider, and the now-empty S3 bucket).
