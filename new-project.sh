@@ -65,6 +65,13 @@ if ! terraform version > /dev/null 2>&1; then
   exit 1
 fi
 
+if ! aws sts get-caller-identity --profile "${BOOTSTRAP_PROFILE}" > /dev/null 2>&1; then
+  echo "Error: AWS SSO session expired or not active." >&2
+  echo "" >&2
+  echo "  aws sso login --profile ${BOOTSTRAP_PROFILE} && export AWS_PROFILE=${BOOTSTRAP_PROFILE}" >&2
+  exit 1
+fi
+
 if ! terraform output > /dev/null 2>&1; then
   echo "Error: no Terraform outputs found." >&2
   echo "Ensure terraform apply has been run and your SSO session is active:" >&2
@@ -138,12 +145,7 @@ TRUST_POLICY=$(cat <<EOF
       "Sid": "SSODevelopers",
       "Effect": "Allow",
       "Principal": { "AWS": "arn:aws:iam::${AWS_ACCOUNT_ID}:root" },
-      "Action": "sts:AssumeRole",
-      "Condition": {
-        "StringLike": {
-          "aws:PrincipalArn": "arn:aws:sts::${AWS_ACCOUNT_ID}:assumed-role/AWSReservedSSO_*/*"
-        }
-      }
+      "Action": "sts:AssumeRole"
     }
   ]
 }
@@ -152,7 +154,11 @@ EOF
 
 echo ""
 if aws iam get-role --profile "${BOOTSTRAP_PROFILE}" --role-name "${ROLE_NAME}" > /dev/null 2>&1; then
-  echo "IAM role ${ROLE_NAME} already exists, skipping creation."
+  echo "IAM role ${ROLE_NAME} already exists, updating trust policy..."
+  aws iam update-assume-role-policy \
+    --profile "${BOOTSTRAP_PROFILE}" \
+    --role-name "${ROLE_NAME}" \
+    --policy-document "${TRUST_POLICY}"
 else
   echo "Creating IAM role ${ROLE_NAME}..."
   aws iam create-role \
@@ -255,19 +261,5 @@ echo "${ROLE_ARN}"
 echo "" >&2
 echo "Done. Next steps:" >&2
 echo "" >&2
-echo "  1. In your project repo, create one backend conf file per environment" >&2
-echo "     in the same directory as your main.tf and paste the block above into" >&2
-echo "     each, changing only the key. Commit the files — no credentials." >&2
-echo "     Example paths (Terraform at repo root):" >&2
-echo "       your-repo/backend-dev.conf" >&2
-echo "       your-repo/backend-staging.conf" >&2
-echo "       your-repo/backend-prod.conf" >&2
-echo "     Or if Terraform is in a subdirectory:" >&2
-echo "       your-repo/infra/backend-dev.conf" >&2
-echo "       your-repo/infra/backend-staging.conf" >&2
-echo "       your-repo/infra/backend-prod.conf" >&2
-echo "  2. Add the role ARN to the GitHub Actions workflow (see README)" >&2
-echo "  3. For local dev, add to your project's terraform.tfvars (gitignored):" >&2
-echo "       role_arn = \"${ROLE_ARN}\"" >&2
-echo "" >&2
-echo "  See the README for the full downstream project setup." >&2
+echo "  Follow the README from 'Using This Backend in Your Own Project', Step 1a onwards." >&2
+echo "  docs/downstream-project.md has the full step-by-step guide." >&2

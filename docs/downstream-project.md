@@ -47,6 +47,117 @@ arn:aws:iam::<ACCOUNT_ID>:role/tf-my-api
 
 ---
 
+## Step 1a — Grant the project role access to your AWS services
+
+The role created in Step 1 (`tf-<project-name>`) has one policy attached by default:
+
+- **`tf-<project-name>-state-access`** — read/write access to the project's Terraform state keys in S3
+
+It has no permissions to create or manage any application infrastructure.
+
+Before running `terraform plan` or `terraform apply` you must attach a second policy that grants the role permission to manage the AWS services your project actually uses (EC2, EKS, RDS, CloudFront, etc.).
+
+**Create the policy document**
+
+Create a JSON file (e.g. `tf-<project-name>-infra-policy.json` in your project repo) listing the IAM actions your Terraform code requires. Include one `Statement` block per service — this makes it easy to audit and extend as your project grows.
+
+Only include services your project actually uses. The example below shows the structure for a project using S3, CloudFront, and Route53 — add or remove blocks to match your stack:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "S3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:DeleteBucket",
+        "s3:DeleteBucketPolicy",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:GetBucketTagging",
+        "s3:GetBucketVersioning",
+        "s3:GetEncryptionConfiguration",
+        "s3:ListBucket",
+        "s3:PutBucketPolicy",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:PutBucketTagging",
+        "s3:PutBucketVersioning",
+        "s3:PutEncryptionConfiguration"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CloudFront",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:CreateCachePolicy",
+        "cloudfront:CreateDistribution",
+        "cloudfront:CreateOriginAccessControl",
+        "cloudfront:DeleteCachePolicy",
+        "cloudfront:DeleteDistribution",
+        "cloudfront:DeleteOriginAccessControl",
+        "cloudfront:GetCachePolicy",
+        "cloudfront:GetDistribution",
+        "cloudfront:GetDistributionConfig",
+        "cloudfront:GetOriginAccessControl",
+        "cloudfront:ListDistributions",
+        "cloudfront:ListTagsForResource",
+        "cloudfront:TagResource",
+        "cloudfront:UpdateCachePolicy",
+        "cloudfront:UpdateDistribution",
+        "cloudfront:UpdateOriginAccessControl"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Route53",
+      "Effect": "Allow",
+      "Action": [
+        "route53:ChangeResourceRecordSets",
+        "route53:ChangeTagsForResource",
+        "route53:CreateHostedZone",
+        "route53:DeleteHostedZone",
+        "route53:GetChange",
+        "route53:GetHostedZone",
+        "route53:ListHostedZones",
+        "route53:ListHostedZonesByName",
+        "route53:ListResourceRecordSets",
+        "route53:ListTagsForResource"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+> **Scope note:** All statements use `Resource: "*"` because the ARNs of the resources Terraform is
+> about to create are not known at policy-creation time. Access is constrained by the action list,
+> not the resource ARN.
+
+**Create and attach the policy**
+
+```bash
+# Create the policy
+POLICY_ARN=$(aws iam create-policy \
+  --profile terraform-admin \
+  --policy-name tf-<project-name>-infra-access \
+  --policy-document file://tf-<project-name>-infra-policy.json \
+  --query 'Policy.Arn' \
+  --output text)
+
+# Attach it to the project role
+aws iam attach-role-policy \
+  --profile terraform-admin \
+  --role-name tf-<project-name> \
+  --policy-arn "$POLICY_ARN"
+```
+
+The policy document is safe to commit — it contains no credentials.
+
+---
+
 ## Step 2 — Add the backend block to your project
 
 In your downstream project repository, open (or create) your Terraform root `main.tf` and add an empty `backend "s3"` block. The block must be empty — all configuration is supplied at init time via `backend.conf`.

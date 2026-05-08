@@ -46,6 +46,12 @@
             "Resource": "*"
         },
         {
+            "Sid": "STSAssumeProjectRoles",
+            "Effect": "Allow",
+            "Action": ["sts:AssumeRole"],
+            "Resource": "arn:aws:iam::*:role/tf-*"
+        },
+        {
             "Sid": "S3StateObjects",
             "Effect": "Allow",
             "Action": [

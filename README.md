@@ -3,7 +3,7 @@ ___
 
 ## Overview
 This project creates the AWS infrastructure required to use S3 as a Terraform remote backend. Run
-this once before any other Terraform project — the resulting S3 bucket and DynamoDB table can serve
+this once before any other Terraform project — the resulting S3 bucket and KMS key can serve
 an unlimited number of projects.
 
 **S3** stores the Terraform state file centrally, providing a single source of truth across runs and
@@ -27,7 +27,7 @@ uses those credentials to create the backend infrastructure.
 ### 2. Create a Permission Set
 A Permission Set defines what actions are allowed when you log in with this profile. This one grants
 the permissions Terraform needs to create all resources in this project: IAM roles and
-policies; S3 bucket and its configuration; DynamoDB table; and KMS key.
+policies; S3 bucket and its configuration; and KMS key.
 
 1. IAM Identity Center → **Permission sets** → **Create permission set**
 2. Choose **Custom permission set**
@@ -118,6 +118,32 @@ The script creates an IAM role and state-access policy for the project, then pri
 
 - **`backend.conf` block** — the S3 backend configuration (safe to commit, no credentials)
 - **Role ARN** — the IAM role your project will assume when provisioning resources
+
+### 1a. Grant the project role access to your AWS services
+
+The role created in step 1 can read and write Terraform state, but has no permissions to create or
+manage application infrastructure. Before running `terraform plan` you must attach a second IAM
+policy that covers the AWS services your project uses.
+
+Create a policy document (e.g. `tf-<project-name>-infra-policy.json`) listing the actions your
+Terraform code requires, then create and attach it:
+
+```bash
+POLICY_ARN=$(aws iam create-policy \
+  --profile terraform-admin \
+  --policy-name tf-<project-name>-infra-access \
+  --policy-document file://tf-<project-name>-infra-policy.json \
+  --query 'Policy.Arn' \
+  --output text)
+
+aws iam attach-role-policy \
+  --profile terraform-admin \
+  --role-name tf-<project-name> \
+  --policy-arn "$POLICY_ARN"
+```
+
+See [docs/downstream-project.md](docs/downstream-project.md#step-1a--grant-the-project-role-access-to-your-aws-services)
+for full guidance including a worked example and scope notes.
 
 ### 2. Configure main.tf
 
@@ -260,11 +286,6 @@ described above. See [examples/README.md](examples/README.md) for a walkthrough.
 Once you are done your S3 bucket should look something like:
 
 ![S3 bucket containing two sample projects](docs/images/s3.png)
-
-
-and your DynamoDB table should look something like:
-
-![DynamoDB table containing two sample projects](docs/images/dynamodb.png)
 
 
 ## Multi-environment projects
