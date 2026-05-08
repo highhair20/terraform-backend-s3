@@ -260,14 +260,17 @@ cp <path-to-terraform-backend-s3>/examples/.github/workflows/terraform.yml \
    .github/workflows/terraform.yml
 ```
 
-In your GitHub repository go to **Settings → Secrets and variables → Actions → Variables** and add:
+In your GitHub repository go to **Settings → Secrets and variables → Actions → Variables** (the
+**Variables** tab, not Secrets) and add:
 
-| Variable | Value |
+| Repository Variable | Value |
 |---|---|
 | `TF_ROLE_ARN` | Role ARN printed by `new-project.sh` |
 | `AWS_ACCOUNT_ID` | Your AWS account ID |
 | `AWS_REGION` | e.g. `us-east-1` |
 | `TF_PROJECT_NAME` | Your project name (e.g. `my-api`) |
+
+None of these are secrets — they contain no credentials and are safe to store as plain variables.
 
 If your Terraform root is in a subdirectory (e.g. `infra/`), uncomment and set `working-directory` in the workflow file.
 
