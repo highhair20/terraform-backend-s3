@@ -272,7 +272,14 @@ In your GitHub repository go to **Settings → Secrets and variables → Actions
 
 None of these are secrets — they contain no credentials and are safe to store as plain variables.
 
-If your Terraform root is in a subdirectory (e.g. `infra/`), uncomment and set `working-directory` in the workflow file.
+If your Terraform files are in a subdirectory (e.g. `infra/`), open the workflow file and uncomment
+the `defaults` block near the top of the job, setting `working-directory` to your subdirectory:
+
+```yaml
+defaults:
+  run:
+    working-directory: infra
+```
 
 Commit and push. The workflow runs `terraform plan` on every PR and `terraform apply` on merge to `main`.
 
